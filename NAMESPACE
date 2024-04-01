@@ -1,0 +1,4 @@
+exportPattern("^[[:alpha:]]+")
+importFrom("stats", "runif")
+importFrom("openai", "create_chat_completion")
+importFrom("utils", "setTxtProgressBar")

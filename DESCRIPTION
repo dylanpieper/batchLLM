@@ -1,0 +1,11 @@
+Package: batchGPT
+Type: Package
+Title: batchGPT: Conduct Natural Language Tasks Using OpenAI's GPT Model
+Version: 0.1.0
+Author: Dylan Pieper
+Maintainer: The package maintainer <dylanpieper@gmail.com>
+Description: Use OpenAI's GPT model to conduct natural language tasks using rows from a column as the input. The batching feature is particularly useful for completing tasks on large datasets with little to no supervision.
+License: use_mit_license()
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.3
