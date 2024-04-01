@@ -18,16 +18,16 @@ batchGPT(
 
 \item{prompt}{A system prompt for the GPT model.}
 
-\item{batch_size}{The number of rows to process in each batch. Default is 10.}
+\item{batch_size}{The number of rows to process in each batch.}
 
-\item{attempts}{The maximum number of attempts in case of errors. Default is 1.}
+\item{attempts}{The maximum number of attempts in case of errors.}
 
-\item{model}{An OpenAI model. Default is gpt-3.5-turbo-0125.}
+\item{model}{An OpenAI model.}
 
-\item{temperature}{A temperature for the GPT model. Default is 0.1.}
+\item{temperature}{A temperature for the GPT model.}
 }
 \value{
-Returns the original data frame and adds a column with the GPT output (gpt_output). Writes progress to `gpt_output.RDS`.
+Returns the original data frame and adds a column with the GPT output (gpt_output). Writes progress to \code{gpt_output.RDS}.
 }
 \description{
 Use OpenAI's GPT model to conduct natural language tasks using rows from a column as the input.

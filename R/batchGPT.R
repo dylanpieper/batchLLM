@@ -6,11 +6,11 @@
 #'
 #' @param input A vector extracted from a data frame using the $ operator. This function does not support piping.
 #' @param prompt A system prompt for the GPT model.
-#' @param batch_size The number of rows to process in each batch. Default is 10.
-#' @param attempts The maximum number of attempts in case of errors. Default is 1.
-#' @param model An OpenAI model. Default is gpt-3.5-turbo-0125.
-#' @param temperature A temperature for the GPT model. Default is 0.1.
-#' @return Returns the original data frame and adds a column with the GPT output (gpt_output). Writes progress to `gpt_output.RDS`.
+#' @param batch_size The number of rows to process in each batch.
+#' @param attempts The maximum number of attempts in case of errors.
+#' @param model An OpenAI model.
+#' @param temperature A temperature for the GPT model.
+#' @return Returns the original data frame and adds a column with the GPT output (gpt_output). Writes progress to \code{gpt_output.RDS}.
 #' @export
 #' @examples
 #' library(batchGPT)
