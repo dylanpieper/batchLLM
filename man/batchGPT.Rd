@@ -14,7 +14,7 @@ batchGPT(
 )
 }
 \arguments{
-\item{input}{A vector from a data frame defined by the $ operator. Data cannot be piped.}
+\item{input}{A vector extracted from a data frame using the $ operator. This function does not support piping.}
 
 \item{prompt}{A system prompt for the GPT model.}
 
@@ -27,7 +27,7 @@ batchGPT(
 \item{temperature}{A temperature for the GPT model. Default is 0.1.}
 }
 \value{
-Returns the original data frame and adds a column with the GPT output (gpt_output). Writes progress to \code{gpt_output.RDS}.
+Returns the original data frame and adds a column with the GPT output (gpt_output). Writes progress to `gpt_output.RDS`.
 }
 \description{
 Use OpenAI's GPT model to conduct natural language tasks using rows from a column as the input.
