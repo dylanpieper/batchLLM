@@ -27,7 +27,7 @@
 #' print(phrases)
 batchGPT <- function(input, prompt, batch_size = 10, attempts = 1,
                      model = "gpt-3.5-turbo-0125",
-                     temperature = .1) {
+                     temperature = .5) {
 
   df_name <- deparse(substitute(input))
   vector_name <- sub(".+\\$", "", df_name)
@@ -113,8 +113,8 @@ batchGPT <- function(input, prompt, batch_size = 10, attempts = 1,
 #' @param df A data frame.
 #' @param df_col A column from the data frame.
 #' @param system_prompt A system prompt for the GPT model.
-#' @param model A GPT model. Default is "gpt-3.5-turbo-0125".
-#' @param temperature A temperature for the GPT model. Default is 0.1.
+#' @param model A GPT model.
+#' @param temperature A temperature for the GPT model.
 #' @return A data frame with the mutated row.
 mutate_row <- function(df, df_col, system_prompt, model, temperature) {
   content_input <- as.character(df_col)
@@ -193,10 +193,10 @@ load_saved_progress <- function() {
 #' @param df A data frame.
 #' @param df_col A column from the data frame.
 #' @param system_prompt A system prompt for the GPT model.
-#' @param batch_size The number of rows to process in each batch. Default is 100.
+#' @param batch_size The number of rows to process in each batch.
 #' @param batch_size The current batch number tracked during processing.
-#' @param model A GPT model. Default is "gpt-3.5-turbo-0125".
-#' @param temperature A temperature for the GPT model. Default is 0.1.
+#' @param model A GPT model.
+#' @param temperature A temperature for the GPT model.
 #' @param rows A placeholder for the number of rows in the whole data frame.
 #' @return The final output data frame after processing all the rows.
 batch_mutate <- function(df, df_col, system_prompt, batch_size, batch_num, batch_total, model, temperature, rows) {

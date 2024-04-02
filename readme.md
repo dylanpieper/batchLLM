@@ -25,15 +25,3 @@ print(phrases)
 # screw the world       negative
 # the world is a sphere neutral
 ```
-
-**Future Improvements**
-
--   Accept piped data, for example:
-
-```{r}
-phrases |>
-batchGPT(
-  input = user,
-  prompt = "classify the sentiment using one word: positive, negative, or neutral"
-)
-```
