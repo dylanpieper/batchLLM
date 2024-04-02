@@ -103,19 +103,6 @@ batchGPT <- function(input, prompt, batch_size = 10, attempts = 1,
   }
 }
 
-#' Mutate Row
-#'
-#' This function takes in a data frame \code{df}, a column from the data frame \code{df_col},
-#' a system prompt \code{system_prompt}, a GPT model \code{model}, and a temperature \code{temperature}.
-#' It uses the GPT model to generate a completion based on the system prompt and the content input.
-#' The completion is assigned to the \code{gpt_output} column of the data frame.
-#'
-#' @param df A data frame.
-#' @param df_col A column from the data frame.
-#' @param system_prompt A system prompt for the GPT model.
-#' @param model A GPT model.
-#' @param temperature A temperature for the GPT model.
-#' @return A data frame with the mutated row.
 mutate_row <- function(df, df_col, system_prompt, model, temperature) {
   content_input <- as.character(df_col)
 
@@ -158,24 +145,10 @@ mutate_row <- function(df, df_col, system_prompt, model, temperature) {
   return(df)
 }
 
-#' Save Progress
-#'
-#' This function takes in an output and a last completed batch,
-#' and saves them as RDS files.
-#'
-#' @param output The output to be saved.
-#' @param last_completed_batch The last completed batch to be saved.
 save_progress <- function(output, last_completed_batch) {
   saveRDS(list(output = output, last_completed_batch = last_completed_batch), file = "gpt_output.RDS")
 }
 
-#' Load Saved Progress
-#'
-#' This function loads the previously saved output and last completed batch
-#' from RDS files.
-#'
-#' @return A list containing the loaded output and last completed batch,
-#' or NULL if no existing saved progress is found.
 load_saved_progress <- function() {
   if (file.exists("gpt_output.RDS")) {
     return(readRDS(file = "gpt_output.RDS"))
@@ -184,21 +157,6 @@ load_saved_progress <- function() {
   }
 }
 
-#' Batch Mutate
-#'
-#' This function applies the \code{mutate_row} function in batches to a data frame.
-#' It processes a specified number of rows at a time and saves the progress.
-#' It returns the final output data frame after all the rows have been processed.
-#'
-#' @param df A data frame.
-#' @param df_col A column from the data frame.
-#' @param system_prompt A system prompt for the GPT model.
-#' @param batch_size The number of rows to process in each batch.
-#' @param batch_size The current batch number tracked during processing.
-#' @param model A GPT model.
-#' @param temperature A temperature for the GPT model.
-#' @param rows A placeholder for the number of rows in the whole data frame.
-#' @return The final output data frame after processing all the rows.
 batch_mutate <- function(df, df_col, system_prompt, batch_size, batch_num, batch_total, model, temperature, rows) {
   out <- vector("list", 0)
   rows_processed <- 0
