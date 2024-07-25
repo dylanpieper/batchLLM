@@ -4,7 +4,7 @@
 #' Completions are batched to save your progress in case of an error or interruption.
 #' For API etiquette, there is a delay between each completion and each batch.
 #'
-#' @param input A vector extracted from a data frame using the $ operator. This function does not support piping.
+#' @param input A vector from a data frame defined using the $ operator. This function does not support piping.
 #' @param prompt A system prompt for the GPT model.
 #' @param batch_size The number of rows to process in each batch.
 #' @param attempts The maximum number of attempts in case of errors.
