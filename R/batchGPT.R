@@ -31,6 +31,7 @@ batchGPT <- function(input, prompt, batch_size = 10, attempts = 1,
 
   # Validate the input format and extract data frame and column names
   df_name <- deparse(substitute(input))
+  vector_name <- sub(".+\\$", "", df_name)
   if (!grepl("\\$", df_name)) {
     stop("Input must include a $ operator.")
   }
