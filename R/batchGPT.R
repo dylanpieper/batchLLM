@@ -29,14 +29,47 @@ batchGPT <- function(input, prompt, batch_size = 10, attempts = 1,
                      model = "gpt-3.5-turbo-0125",
                      temperature = .5) {
 
+  # Validate the input format and extract data frame and column names
   df_name <- deparse(substitute(input))
-  vector_name <- sub(".+\\$", "", df_name)
-  df <- eval(parse(text = strsplit(df_name, "\\$")[[1]][1]), envir = parent.frame())
-  batch_total <- ceiling(nrow(df) / batch_size)
-
   if (!grepl("\\$", df_name)) {
-    stop("The input must include the $ operator. Please provide a valid input.")
+    stop("Input must include a $ operator.")
   }
+  
+  # Split input into data frame and column names
+  df_parts <- strsplit(df_name, "\\$")[[1]]
+  if (length(df_parts) != 2) {
+    stop("Invalid input format. Ensure the input is in the format 'data_frame$column'.")
+  }
+  
+  # Extract data frame and column names
+  df_name <- df_parts[1]
+  col_name <- df_parts[2]
+  
+  # Check if the data frame exists in the environment
+  if (!exists(df_name, envir = .GlobalEnv)) {
+    stop(paste("Data frame", df_name, "not found in the environment."))
+  }
+  
+  # Get the data frame
+  df <- get(df_name, envir = .GlobalEnv)
+  
+  # Validate that it's a data frame
+  if (!is.data.frame(df)) {
+    stop(paste(df_name, "is not a data frame."))
+  }
+  
+  # Check if the column exists in the data frame
+  if (!col_name %in% names(df)) {
+    stop(paste("Column", col_name, "not found in", df_name))
+  }
+  
+  # Check if the column is an atomic vector
+  if (!is.atomic(df[[col_name]])) {
+    stop(paste("Column", col_name, "in", df_name, "is not an atomic vector."))
+  }
+  
+  # Calculate batch total if needed
+  batch_total <- ceiling(nrow(df) / batch_size)
 
   progress <- load_saved_progress()
 
@@ -80,7 +113,11 @@ batchGPT <- function(input, prompt, batch_size = 10, attempts = 1,
           },
           error = function(e) {
             if (counter >= attempts) {
-              stop("Maximum attempts limit reached.")
+              print("Maximum attempts limit reached.")
+              stop(paste(
+                "Error occurred, trying again. Data processed up to row", end_row, ": ",
+                conditionMessage(e), ". Attempt: ", counter, "."
+              ))
             } else {
               print(paste(
                 "Error occurred, trying again. Data processed up to row", end_row, ": ",
