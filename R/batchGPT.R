@@ -32,14 +32,11 @@ batchGPT <- function(input, prompt, batch_size = 10, attempts = 1,
   # Validate the input format and extract data frame and column names
   df_name <- deparse(substitute(input))
   vector_name <- sub(".+\\$", "", df_name)
-  if (!grepl("\\$", df_name)) {
-    stop("Input must include a $ operator.")
-  }
   
   # Split input into data frame and column names
   df_parts <- strsplit(df_name, "\\$")[[1]]
   if (length(df_parts) != 2) {
-    stop("Invalid input format. Ensure the input is in the format 'data_frame$column'.")
+    stop("Invalid input format. Ensure the input is in the format 'df$column'.")
   }
   
   # Extract data frame and column names
@@ -61,7 +58,7 @@ batchGPT <- function(input, prompt, batch_size = 10, attempts = 1,
   
   # Check if the column exists in the data frame
   if (!col_name %in% names(df)) {
-    stop(paste("Column", col_name, "not found in", df_name))
+    stop(paste("Column", col_name, "not found in", df_name, "."))
   }
   
   # Check if the column is an atomic vector
