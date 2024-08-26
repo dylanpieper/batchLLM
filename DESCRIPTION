@@ -1,10 +1,10 @@
-Package: batchGPT
+Package: batchLLM
 Type: Package
-Title: batchGPT: Conduct Natural Language Tasks Using OpenAI's GPT Model
-Version: 0.1.0
+Title: batchLLM: Batch LLM completions in R and locally store output and metadata
+Version: 0.9.0
 Author: Dylan Pieper
 Maintainer: The package maintainer <dylanpieper@gmail.com>
-Description: Use OpenAI's GPT model to conduct natural language tasks using rows from a column as the input. The batching feature is particularly useful for completing tasks on large datasets with little to no supervision.
+Description: The goal of batchLLM is to facilitate Large Language Model (LLM) operations on data frames in batches with local storage. Effortlessly loop across rows of a column and generate text completions on large datasets with minimal supervision. The package currently supports OpenAI GPT and Anthropic Claude models, with built-in delays for API etiquette. The package addresses challenges in text processing by offering features such as saving batches and metadata in a locally stored log file and implementing a Shiny App Addin. Use cases include sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation. You can also compare the output of different LLMs.
 License: use_mit_license()
 Encoding: UTF-8
 LazyData: true

@@ -1,0 +1,4 @@
+Name: batchLLM
+Description: Run batchLLM on selected data
+Binding: batchLLM_shiny
+Interactive: true
