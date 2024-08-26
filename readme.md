@@ -46,7 +46,7 @@ print(phrases)
 
 -   **Batching**: Applies the prompt to a specified number of rows at a time, with short delays within batches and longer delays between batches.
 
--   **Progress Resume**: Automatically resumes from the last completed step if the process is interrupted, ensuring continuity and saving resources.
+-   **Resume Progress**: Automatically resumes from the last completed step if the process is interrupted, ensuring continuity and saving resources.
 
 -   **Hashing**: Generates unique hashes for column names and data frames, preventing mutation conflicts. Uses the `digest` function and `crc32c` algorithm by default.
 
