@@ -24,7 +24,9 @@ library(batchLLM)
 
 Sys.setenv(OPENAI_API_KEY = "...")
 
-phrases <- data.frame(user = c("The world is a sphere, and I love it.", "The world is a sphere, and that is science.", "The world is flat, and round earth is a conspiracy."))
+phrases <- data.frame(user = c("The world is a sphere, and I love it.", 
+                               "The world is a sphere, and that is science.", 
+                               "The world is flat, and round earth is a conspiracy."))
 
 batchLLM(
   df_name = "phrases",
