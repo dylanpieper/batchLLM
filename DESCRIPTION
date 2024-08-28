@@ -4,7 +4,7 @@ Title: batchLLM: Batch LLM completions in R and locally store output and metadat
 Version: 0.9.0
 Author: Dylan Pieper
 Maintainer: The package maintainer <dylanpieper@gmail.com>
-Description: Batch process Large Language Model (LLM) text generation models on data frames with local storage and metadata, effortlessly loop across rows of a column and generate text completions with minimal supervision; the package currently supports OpenAI GPT, Anthropic Claude, and Google Gemini models, with built-in delays for API etiquette, addressing challenges in text processing by offering features such as saving batches and metadata in a locally stored log file after each batch, comparing the output of different LLMs, and implementing a Shiny App Addin; use cases include natural language processing tasks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation.
+Description: Batch process Large Language Model (LLM) text generation models on data frames with local storage and metadata, effortlessly loop across rows of a column and generate text completions with minimal supervision; the package currently supports OpenAI's GPT, Anthropic's Claude, and Google's Gemini models, with built-in delays for API etiquette, addressing challenges in text processing by offering features such as saving batches and metadata in a locally stored log file after each batch, comparing the output of different LLMs, and implementing a Shiny App Addin; use cases include natural language processing tasks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation.
 License: use_mit_license()
 Encoding: UTF-8
 LazyData: true
