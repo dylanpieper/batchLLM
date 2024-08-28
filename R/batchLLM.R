@@ -1,11 +1,12 @@
 #' @title batchLLM
-#' 
-#' @description The goal of batchLLM is to facilitate Large Language Model (LLM) operations on data frames in batches with local storage.
-#' Effortlessly loop across rows of a column and generate text completions on large datasets with minimal supervision.
-#' The package currently supports OpenAI GPT and Anthropic Claude models, with built-in delays for API etiquette.
-#' The package addresses challenges in text processing by offering features such as saving batches and metadata in a locally stored log file and implementing a Shiny App Addin.
-#' Use cases include sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation.
-#' You can also compare the output of different LLMs.
+#'
+#' @description Batch process Large Language Model (LLM) text generation models on data frames with local storage and metadata.
+#' Effortlessly loop across rows of a column and generate text completions with minimal supervision.
+#' The package currently supports OpenAI GPT, Anthropic Claude, and Google Gemini models, with built-in delays for API etiquette.
+#' The package addresses challenges in text processing by offering features such as saving batches and metadata in a locally stored log file after each batch.
+#' Compare the output of different LLMs and implement a Shiny App Addin.
+#' Use cases include natural language processing tasks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation.
+
 #'
 #' @param df_name A string for the name of a data frame.
 #' @param col_name A string for the name of a column.
@@ -48,7 +49,7 @@
 #'     }
 #'   }
 #' }
-#' 
+#'
 #' @export
 #' @examples
 #' library(batchLLM)
@@ -56,9 +57,11 @@
 #' Sys.setenv(OPENAI_API_KEY = "...")
 #'
 #' phrases <- data.frame(
-#'   user = c("The world is a sphere, and I love it.", 
-#'            "The world is a sphere, and that is science.", 
-#'            "The world is flat, and round earth is a conspiracy.")
+#'   user = c(
+#'     "The world is a sphere, and I love it.",
+#'     "The world is a sphere, and that is science.",
+#'     "The world is flat, and round earth is a conspiracy."
+#'   )
 #' )
 #'
 #' batchLLM(
@@ -68,9 +71,9 @@
 #' )
 #'
 #' print(phrases)
-batchLLM <- function(df_name, 
-                     col_name, 
-                     prompt, 
+batchLLM <- function(df_name,
+                     col_name,
+                     prompt,
                      batch_size = 10,
                      LLM = "openai",
                      model = "gpt-4o-mini",
@@ -80,20 +83,18 @@ batchLLM <- function(df_name,
                      case_convert = NULL,
                      hash_algo = "crc32c",
                      ...) {
-  
   save_progress <- function(df_name, col_name, df, last_batch, total_time, prompt, LLM, model, temperature, new_col_name, status, log_name) {
-    
     log_file <- paste0(log_name, ".rds")
-    
+
     batch_log <- if (file.exists(log_file)) {
       readRDS(log_file)
     } else {
       list(data = list())
     }
-    
+
     param_id <- digest::digest(df[[col_name]], algo = hash_algo)
     df_key <- paste0(df_name, "_", param_id)
-    
+
     if (is.null(batch_log$data[[df_key]])) {
       batch_log$data[[df_key]] <- list(
         output = df,
@@ -109,7 +110,7 @@ batchLLM <- function(df_name,
         )
       )
     }
-    
+
     if (is.null(batch_log$data[[df_key]]$metadata[[new_col_name]])) {
       batch_log$data[[df_key]]$metadata[[new_col_name]] <- list(
         batches = list(),
@@ -120,7 +121,7 @@ batchLLM <- function(df_name,
       batch_log$data[[df_key]]$metadata[[new_col_name]]$last_batch <- last_batch
       batch_log$data[[df_key]]$metadata[[new_col_name]]$total_time <- total_time
     }
-    
+
     batch_log$data[[df_key]]$metadata[[new_col_name]]$batches[[as.character(last_batch)]] <- list(
       status = status,
       timestamp = Sys.time(),
@@ -130,10 +131,10 @@ batchLLM <- function(df_name,
       model = model,
       temperature = temperature
     )
-    
+
     saveRDS(batch_log, log_file)
   }
-  
+
   load_progress <- function(log_name) {
     log_file <- paste0(log_name, ".rds")
     if (file.exists(log_file)) {
@@ -142,16 +143,15 @@ batchLLM <- function(df_name,
       return(list(data = list()))
     }
   }
-  
+
   batch_mutate <- function(df, df_col, system_prompt, batch_size, batch_num, batch_total, LLM, model, temperature, rows, log_name, case_convert, ...) {
-    
     mutate_row <- function(df_row, content_input, system_prompt, LLM, model, temperature, log_name, case_convert, ...) {
       if (length(content_input) == 1 && !is.na(content_input)) {
         tryCatch(
           {
             content_output <- NULL
-            
-            if(grepl("openai", LLM)) {
+
+            if (grepl("openai", LLM)) {
               completion <- create_chat_completion(
                 model = model,
                 temperature = temperature,
@@ -168,24 +168,32 @@ batchLLM <- function(df_name,
                 ...
               )
               content_output <- trimws(completion$choices$message.content)
-            } else if(grepl("anthropic", LLM)) {
+            } else if (grepl("anthropic", LLM)) {
               content_output <- claudeR(
-                prompt = if(grepl("claude-2", model)){
+                prompt = if (grepl("claude-2", model)) {
                   paste0(system_prompt, "(put response in XML tags <results>)", ":", as.character(content_input))
-                }else if(grepl("claude-3", model)){
+                } else if (grepl("claude-3", model)) {
                   list(list(role = "user", content = paste0(system_prompt, "(put response in XML tags <results>)", ":", as.character(content_input))))
                 },
-                model = model, 
+                model = model,
+                temperature = temperature,
+                ...
+              )
+              content_output <- sub(".*<results>(.*?)</results>.*", "\\1", content_output)
+            } else if (grepl("google", LLM)) {
+              content_output <- gemini.R::gemini_chat(
+                prompt = paste0(system_prompt, "(put response in XML tags <results>)", ":", as.character(content_input)),
+                model = model,
                 temperature = temperature,
                 ...
               )
               content_output <- sub(".*<results>(.*?)</results>.*", "\\1", content_output)
             }
-        
+
             if (is.null(content_output)) {
               stop("Failed to obtain content_output. Check API responses and paths.")
             }
-            
+
             if (!is.null(content_output) && length(content_output) > 0) {
               output_text <- content_output[1]
               if (!is.null(case_convert) || case_convert != "none") {
@@ -208,12 +216,12 @@ batchLLM <- function(df_name,
         stop("Invalid input: content_input must be a single non-NA value")
       }
     }
-    
+
     df <- df |> dplyr::mutate(row_number = dplyr::row_number())
-    
+
     total_rows <- nrow(df)
     result <- vector("character", total_rows)
-    
+
     for (i in seq_len(total_rows)) {
       if (!is.na(df_col[i])) {
         result[i] <- tryCatch(
@@ -230,57 +238,56 @@ batchLLM <- function(df_name,
       }
       Sys.sleep(runif(1, min = 0.1, max = 0.3))
     }
-    
+
     if (batch_num < batch_total) {
       message("Taking a break to make the API happy 🤖❤️")
       pb <- txtProgressBar(min = 0, max = 100, style = 3)
-      for(i in 1:100) {
+      for (i in 1:100) {
         Sys.sleep(runif(1, min = 0.05, max = 0.15))
         setTxtProgressBar(pb, i)
-        
+
         if (i %in% c(25, 50, 75)) {
           message(i, "% through the break")
         }
-        
       }
       close(pb)
     }
-    
+
     df$gpt_output <- result
     return(df)
   }
-  
+
   if (!exists(df_name, envir = .GlobalEnv)) {
     stop(paste("Object", df_name, "does not exist in the global environment."))
   }
-  
+
   df <- get(df_name, envir = .GlobalEnv)
-  
+
   if (!is.data.frame(df) || !inherits(df, "data.frame")) {
     stop(paste(df_name, "is not a valid data frame."))
   }
-  
+
   if (!col_name %in% colnames(df)) {
     stop(paste("Column", col_name, "does not exist in", df_name, "."))
   }
-  
+
   param_id <- digest::digest(list(prompt, LLM, model, temperature, batch_size, attempts, log_name, case_convert), algo = hash_algo)
   new_col_name <- paste0(col_name, "_", param_id)
-  
+
   param_id <- digest::digest(df[[col_name]], algo = hash_algo)
   new_df_key <- paste0(df_name, "_", param_id)
-  
+
   log_file <- paste0(log_name, ".rds")
   batch_log <- load_progress(log_file)
-  
+
   if (!is.null(batch_log$data) && !is.null(batch_log$data[[new_df_key]])) {
     progress <- batch_log$data[[new_df_key]]
-    
+
     if (!is.null(progress$output) && new_col_name %in% colnames(progress$output)) {
       output <- progress$output
       last_batch <- progress$metadata[[new_col_name]]$last_batch
       total_time <- progress$metadata[[new_col_name]]$total_time
-      
+
       if (nrow(output) == nrow(df) && !any(is.na(output[[new_col_name]]))) {
         message("All rows have already been processed for this column. No further processing needed.")
         df[[new_col_name]] <- output[[new_col_name]]
@@ -303,52 +310,53 @@ batchLLM <- function(df_name,
     last_batch <- 0
     total_time <- 0
   }
-  
+
   start_time <- Sys.time()
-  
+
   batch_total <- ceiling(nrow(df) / batch_size)
-  
+
   for (batch_num in (last_batch + 1):batch_total) {
     message("Starting batch ", batch_num, " of ", batch_total)
-    
+
     start_row <- (batch_num - 1) * batch_size + 1
     end_row <- min(batch_num * batch_size, nrow(df))
-    
+
     rows_to_process <- which(is.na(output[start_row:end_row, new_col_name])) + start_row - 1
-    
+
     if (length(rows_to_process) == 0) {
       message("Skipping batch ", batch_num, " of ", batch_total, " as all rows are already processed.")
       next
     }
-    
+
     retry_flag <- TRUE
     counter <- 1
     while (retry_flag && (counter <= attempts)) {
       tryCatch(
         {
           save_progress(df_name, col_name, output, batch_num - 1, total_time, prompt, LLM, model, temperature, new_col_name, "In Progress", log_name)
-          
+
           output_batch <- batch_mutate(df[rows_to_process, , drop = FALSE],
-                                       df[[col_name]][rows_to_process],
-                                       system_prompt = prompt,
-                                       batch_size = length(rows_to_process),
-                                       batch_num = batch_num,
-                                       batch_total = batch_total,
-                                       LLM = LLM,
-                                       model = model,
-                                       temperature = temperature,
-                                       rows = nrow(df),
-                                       log_name = log_name,
-                                       case_convert = case_convert)
-          
+            df[[col_name]][rows_to_process],
+            system_prompt = prompt,
+            batch_size = length(rows_to_process),
+            batch_num = batch_num,
+            batch_total = batch_total,
+            LLM = LLM,
+            model = model,
+            temperature = temperature,
+            rows = nrow(df),
+            log_name = log_name,
+            case_convert = case_convert
+          )
+
           output[rows_to_process, new_col_name] <- output_batch$gpt_output
-          
+
           current_time <- Sys.time()
           time_elapsed_batch <- as.numeric(difftime(current_time, start_time, units = "secs"))
           total_time <- total_time + time_elapsed_batch
-          
+
           save_progress(df_name, col_name, output, batch_num, total_time, prompt, LLM, model, temperature, new_col_name, "Completed", log_name)
-          
+
           message("Completed batch ", batch_num, " of ", batch_total)
           retry_flag <- FALSE
         },
@@ -364,75 +372,73 @@ batchLLM <- function(df_name,
         }
       )
     }
-    
+
     if (end_row == nrow(df)) {
       message("All ", batch_total, " batches processed")
       break
     }
     start_time <- Sys.time()
   }
-  
+
   assign(df_name, output, envir = .GlobalEnv)
-  
+
   invisible(output)
 }
 
 #' Get batches
-#' 
+#'
 #' Get batches of generated output in a single data frame from the \code{.rds} log file.
-#' 
+#'
 #' @param df_name A string to match the name of a processed \code{data.frame()} or \code{tibble()}.
 #' @param log_name A string specifying the name of the log without the \code{.rds} file extension. Default is "batchLLM-log".
 #' @return A data frame containing the generated output.
 #' @export
 get_batches <- function(df_name, log_name = "batchLLM-log") {
-  
   log_file <- paste0(log_name, ".rds")
-  
+
   if (!file.exists(log_file)) {
     stop("Log file does not exist.")
   }
-  
+
   batch_log <- readRDS(log_file)
-  
+
   if (!df_name %in% names(batch_log$data)) {
     stop(paste0("No data found in ", log_name, ".rds for the specified df_name."))
   }
-  
+
   output <- batch_log$data[[df_name]]$output
-  
+
   return(output)
 }
 
 #' Scrape metadata
-#' 
+#'
 #' Scrape metadata from the \code{.rds} log file.
-#' 
+#'
 #' @param df_name Optional. A string to match the name of a processed data frame.
 #' @param log_name A string specifying the name of the log file without the extension. Default is "batchLLM-log".
 #' @return A data frame containing metadata.
 #' @export
 scrape_metadata <- function(df_name = NULL, log_name = "batchLLM-log") {
-  
   log_file <- paste0(log_name, ".rds")
-  
+
   if (!file.exists(log_file)) {
     stop("Log file does not exist.")
   }
-  
+
   batch_log <- readRDS(log_file)
-  
+
   scrape_df <- function(df_name, df_data) {
     if (is.null(df_data$metadata) || length(df_data$metadata) == 0) {
       return(NULL)
     }
-    
+
     metadata_list <- lapply(names(df_data$metadata), function(col_name) {
       column_data <- df_data$metadata[[col_name]]
       if (is.null(column_data$batches) || length(column_data$batches) == 0) {
         return(NULL)
       }
-      
+
       lapply(names(column_data$batches), function(batch_num) {
         batch <- column_data$batches[[batch_num]]
         data.frame(
@@ -450,10 +456,10 @@ scrape_metadata <- function(df_name = NULL, log_name = "batchLLM-log") {
         )
       })
     })
-    
+
     do.call(rbind, unlist(metadata_list, recursive = FALSE))
   }
-  
+
   if (!is.null(df_name)) {
     if (!df_name %in% names(batch_log$data)) {
       message(paste("No data found for", df_name, "in the log file."))
@@ -471,6 +477,8 @@ scrape_metadata <- function(df_name = NULL, log_name = "batchLLM-log") {
 
 #' Interact with Anthropic's Claude API
 #'
+#' This function was copied by yrvelez on GitHub (not currently available on CRAN).
+#'
 #' @param api_key Your API key for authentication.
 #' @param prompt A string vector for Claude-2, or a list for Claude-3 specifying the input for the model.
 #' @param model The model to use for the request. Default is the latest Claude-3 model.
@@ -482,35 +490,34 @@ scrape_metadata <- function(df_name = NULL, log_name = "batchLLM-log") {
 #' @param system_prompt Optional. An optional system role specification.
 #' @return The resulting completion up to and excluding the stop sequences.
 #' @export
-claudeR <- function(prompt, model = "claude-3-5-sonnet-20240620", max_tokens = 100,
-stop_sequences = NULL,
-temperature = .7, top_k = -1, top_p = -1,
-api_key = NULL, system_prompt = NULL) {
-  
+claudeR <- function(
+    prompt, model = "claude-3-5-sonnet-20240620", max_tokens = 100,
+    stop_sequences = NULL,
+    temperature = .7, top_k = -1, top_p = -1,
+    api_key = NULL, system_prompt = NULL) {
   if (grepl("claude-3", model) && !is.list(prompt)) {
     stop("Claude-3 requires the input in a list format, e.g., list(list(role = \"user\", content = \"What is the capital of France?\"))")
   }
-  
+
   if (is.null(api_key)) {
     api_key <- Sys.getenv("ANTHROPIC_API_KEY")
     if (api_key == "") {
       stop("Please provide an API key or set it as the ANTHROPIC_API_KEY environment variable.")
     }
   }
-  
+
   if (grepl("claude-2", model)) {
-    
     url <- "https://api.anthropic.com/v1/complete"
     headers <- httr::add_headers(
       "X-API-Key" = api_key,
       "Content-Type" = "application/json",
       "anthropic-version" = "2023-06-01"
     )
-    
+
     prompt <- paste0("\n\nHuman: ", prompt, "\n\nAssistant: ")
-    
-    stop_sequences = '\n\nHuman: '
-    
+
+    stop_sequences <- "\n\nHuman: "
+
     body <- paste0('{
       "prompt": "', gsub("\n", "\\\\n", prompt), '",
       "model": "', model, '",
@@ -518,11 +525,11 @@ api_key = NULL, system_prompt = NULL) {
       "stop_sequences": ["', paste(gsub("\n", "\\\\n", stop_sequences), collapse = '", "'), '"],
       "temperature": ', temperature, ',
       "top_k": ', top_k, ',
-      "top_p": ', top_p, '
-    }')
-    
+      "top_p": ', top_p, "
+    }")
+
     response <- httr::POST(url, headers, body = body)
-    
+
     if (httr::http_status(response)$category == "Success") {
       result <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
       return(trimws(result$completion))
@@ -532,21 +539,20 @@ api_key = NULL, system_prompt = NULL) {
       cat("Error details:\n", httr::content(response, "text", encoding = "UTF-8"), "\n")
       return(NULL)
     }
-    
   }
-  
+
   url <- "https://api.anthropic.com/v1/messages"
-  
+
   headers <- httr::add_headers(
     "x-api-key" = api_key,
     "anthropic-version" = "2023-06-01",
     "Content-Type" = "application/json"
   )
-  
+
   message_list <- lapply(prompt, function(msg) {
     list(role = msg$role, content = msg$content)
   })
-  
+
   request_body_list <- list(
     model = model,
     max_tokens = max_tokens,
@@ -555,15 +561,15 @@ api_key = NULL, system_prompt = NULL) {
     top_p = top_p,
     messages = message_list
   )
-  
+
   if (!is.null(system_prompt)) {
-    request_body_list$system = system_prompt
+    request_body_list$system <- system_prompt
   }
-  
+
   body <- jsonlite::toJSON(request_body_list, auto_unbox = TRUE)
-  
+
   response <- httr::POST(url, headers, body = body)
-  
+
   if (httr::http_status(response)$category == "Success") {
     result <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
     return(result$content$text)

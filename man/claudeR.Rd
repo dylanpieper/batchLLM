@@ -39,5 +39,5 @@ claudeR(
 The resulting completion up to and excluding the stop sequences.
 }
 \description{
-Interact with Anthropic's Claude API
+This function was copied by yrvelez on GitHub (not currently available on CRAN).
 }

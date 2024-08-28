@@ -6,3 +6,4 @@
 /test
 gpt_output.RDS
 last_completed_batch.RDS
+batchLLM-log.rds
