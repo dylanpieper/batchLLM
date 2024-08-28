@@ -88,6 +88,8 @@ After processing multiple batches, you can use the `get_batches()` function to s
 
 You can use the `batchLLM_shiny()` Shiny Addin to quickly run batchLLM from the RStudio IDE. It includes interactive inputs and animated progress alert messages.
 
+https://github.com/user-attachments/assets/364d0d0a-012b-41a5-a5d4-32eb71280037
+
 ## Contributing
 
 Contributions to batchLLM are welcome. Add a new LLM, or help expand the Shiny Addin. Feel free to submit a pull request.
