@@ -8,14 +8,14 @@ batchLLM(
   df_name,
   col_name,
   prompt,
-  batch_size = 10,
   LLM = "openai",
   model = "gpt-4o-mini",
   temperature = 0.5,
+  batch_size = 10,
   attempts = 1,
   log_name = "batchLLM-log",
-  case_convert = NULL,
   hash_algo = "crc32c",
+  case_convert = NULL,
   ...
 )
 }
@@ -26,21 +26,21 @@ batchLLM(
 
 \item{prompt}{A system prompt for the GPT model.}
 
-\item{batch_size}{The number of rows to process in each batch. Default is 10.}
-
-\item{LLM}{A string for the name of the LLM with the options: "openai" and "anthropic". Default is "openai".}
+\item{LLM}{A string for the name of the LLM with the options: "openai", "anthropic", and "google". Default is "openai".}
 
 \item{model}{A string for the name of the model from the LLM. Default is "gpt-4o-mini".}
 
 \item{temperature}{A temperature for the GPT model. Default is .5.}
 
+\item{batch_size}{The number of rows to process in each batch. Default is 10.}
+
 \item{attempts}{The maximum number of loop retry attempts. Default is 1.}
 
 \item{log_name}{A string for the name of the log without the \code{.rds} file extension. Default is "batchLLM-log".}
 
-\item{case_convert}{A string for the case conversion of the output with the options: "upper", "lower", or NULL (no change). Default is NULL.}
-
 \item{hash_algo}{A string for a hashing algorithm from the 'digest' package. Default is \code{crc32c}.}
+
+\item{case_convert}{A string for the case conversion of the output with the options: "upper", "lower", or NULL (no change). Default is NULL.}
 }
 \value{
 Assigns a column with a hashed name containing the text completion output.
@@ -77,8 +77,7 @@ Writes the output and metadata to the log file after each batch in a nested list
 Batch process Large Language Model (LLM) text generation models on data frames with local storage and metadata.
 Effortlessly loop across rows of a column and generate text completions with minimal supervision.
 The package currently supports OpenAI's GPT, Anthropic's Claude, and Google's Gemini models, with built-in delays for API etiquette.
-The package addresses challenges in text processing by offering features such as saving batches and metadata in a locally stored log file after each batch.
-Compare the output of different LLMs and implement a Shiny App Addin.
+The package streamlines text processing by providing advanced features, including automatic logging of batches and metadata to local files, side-by-side comparison of outputs from different large language models, and integration of a user-friendly Shiny App Addin.
 Use cases include natural language processing tasks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation.
 }
 \examples{

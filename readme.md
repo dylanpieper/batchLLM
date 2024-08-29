@@ -2,9 +2,9 @@
 
 Batch process Large Language Model (LLM) text generation models on data frames with local storage and metadata. Effortlessly loop across rows of a column and generate text completions with minimal supervision.
 
-The package currently supports **OpenAI's GPT**, **Anthropic's Claude**, and **Google's Gemini** models, with built-in delays for API etiquette. The package addresses challenges in text processing by offering features such as saving batches and metadata in a locally stored log file after each batch, comparing the output of different LLMs, and implementing a Shiny App Addin.
+The package currently supports **OpenAI's GPT**, **Anthropic's Claude**, and **Google's Gemini** models, with built-in delays for API etiquette. The package streamlines text processing by providing advanced features, including automatic logging of batches and metadata to local files, side-by-side comparison of outputs from different large language models, and integration of a user-friendly Shiny App Addin.
 
-Use cases include natural language processing taks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation.
+Use cases include natural language processing tasks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation.
 
 ## Supported LLMs
 
@@ -65,7 +65,7 @@ print(phrases)
 ```
 
 | user                                                | user_7dd87525 | user_fe2715be | user_e4cb64ba |
-|------------------------|----------------|----------------|----------------|
+|---------------------|-----------------|-----------------|-----------------|
 | The world is a sphere, and I love it.               | positive      | positive      | positive      |
 | The world is a sphere, and that is science.         | neutral       | neutral       | neutral       |
 | The world is flat, and round earth is a conspiracy. | negative      | negative      | negative      |
