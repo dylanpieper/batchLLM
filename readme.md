@@ -6,6 +6,14 @@ The package currently supports **OpenAI's GPT**, **Anthropic's Claude**, and **G
 
 Use cases include natural language processing taks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation.
 
+## Supported LLMs
+
+| LLM       | Models                                                                                                                        | Credit                                                                                  |
+|------------------------|------------------------|------------------------|
+| OpenAI    | gpt-4, gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo                                                                        | <https://github.com/irudnyts/openai>                                                    |
+| Anthropic | claude-3-5-sonnet-20240620, claude-3-opus-20240229, claude-3-sonnet-20240229, claude-3-haiku-20240307, claude-2.1, claude-2.0 | <https://github.com/yrvelez/claudeR> (copied to this package because it is not on CRAN) |
+| Google    | 1.5-pro, 1.5-flash, 1.0-pro                                                                                                   | <https://github.com/jhk0530/gemini.R>                                                   |
+
 ## Installation
 
 You can install batchLLM from GitHub using the `devtools` package:
@@ -57,7 +65,7 @@ print(phrases)
 ```
 
 | user                                                | user_7dd87525 | user_fe2715be | user_e4cb64ba |
-|---------------------------|---------------|---------------|---------------|
+|------------------------|----------------|----------------|----------------|
 | The world is a sphere, and I love it.               | positive      | positive      | positive      |
 | The world is a sphere, and that is science.         | neutral       | neutral       | neutral       |
 | The world is flat, and round earth is a conspiracy. | negative      | negative      | negative      |
@@ -88,7 +96,7 @@ After processing multiple batches, you can use the `get_batches()` function to s
 
 You can use the `batchLLM_shiny()` Shiny Addin to quickly run batchLLM from the RStudio IDE. It includes interactive inputs and animated progress alert messages.
 
-https://github.com/user-attachments/assets/364d0d0a-012b-41a5-a5d4-32eb71280037
+<https://github.com/user-attachments/assets/364d0d0a-012b-41a5-a5d4-32eb71280037>
 
 ## Contributing
 

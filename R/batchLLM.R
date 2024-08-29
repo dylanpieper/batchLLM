@@ -54,7 +54,7 @@
 #' @examples
 #' library(batchLLM)
 #'
-#' Sys.setenv(OPENAI_API_KEY = "...")
+#' Sys.setenv(OPENAI_API_KEY = "")
 #'
 #' phrases <- data.frame(
 #'   user = c(

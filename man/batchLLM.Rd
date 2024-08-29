@@ -84,7 +84,7 @@ Use cases include natural language processing tasks such as sentiment analysis, 
 \examples{
 library(batchLLM)
 
-Sys.setenv(OPENAI_API_KEY = "...")
+Sys.setenv(OPENAI_API_KEY = "")
 
 phrases <- data.frame(
   user = c(
