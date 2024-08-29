@@ -77,7 +77,7 @@ Writes the output and metadata to the log file after each batch in a nested list
 Batch process Large Language Model (LLM) text generation models on data frames with local storage and metadata.
 Effortlessly loop across rows of a column and generate text completions with minimal supervision.
 The package currently supports OpenAI's GPT, Anthropic's Claude, and Google's Gemini models, with built-in delays for API etiquette.
-The package provides advanced text processing features, including automatic logging of batches and metadata to local files, side-by-side comparison of outputs from different large language models, and integration of a user-friendly Shiny App Addin.
+The package provides advanced text processing features, including automatic logging of batches and metadata to local files, side-by-side comparison of outputs from different LLMs, and integration of a user-friendly Shiny App Addin.
 Use cases include natural language processing tasks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation.
 }
 \examples{
