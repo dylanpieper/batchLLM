@@ -92,4 +92,4 @@ https://github.com/user-attachments/assets/364d0d0a-012b-41a5-a5d4-32eb71280037
 
 ## Contributing
 
-Contributions to batchLLM are welcome. Add a new LLM, or help expand the Shiny Addin. Feel free to submit a pull request.
+Contribute to batchLLM! Add a new LLM, or expand the Shiny Addin by submitting a pull request.
