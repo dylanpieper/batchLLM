@@ -65,7 +65,7 @@ print(phrases)
 
 ## **Features**
 
--   **Batching**: Applies the prompt to a specified number of rows at a time, with short delays within batches (each row/request) and longer delays between batches. Both the delay duration and the batch size (number of rows/requests per batch) can be customized using the `batch_delay` and `batch_size` parameters. These parameters can be adjusted to meet API rate limits (e.g., requests per minute).
+-   **Batching**: The prompt is applied to a specified number of rows for each batch, with brief delays between individual rows/requests and longer delays between batches. Both the delay duration and batch size (i.e., number of rows or requests per batch) are customizable using the `batch_delay` and `batch_size` parameters. These settings can be adjusted to comply with API rate limits (e.g., requests per minute).
 
 -   **Resume Progress**: Automatically resumes from the last completed batch if the process is stopped or interrupted, ensuring continuity and saving resources.
 
