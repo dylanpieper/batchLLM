@@ -1,6 +1,6 @@
 # batchLLM <img src="inst/batchGPT_hexLogo.png" width="120" align="right"/>
 
-Batch process Large Language Model (LLM) text completions using data frame rows, with automated storage of results and metadata.
+Batch process Large Language Model (LLM) text completions using data frame rows, with automated local storage of output and metadata.
 
 The package currently supports **OpenAI's GPT**, **Anthropic's Claude**, and **Google's Gemini** models, with built-in delays for API rate limiting. The package provides advanced text processing features, including automatic logging of batches and metadata to local files, side-by-side comparison of outputs from different LLMs, and integration of a user-friendly Shiny App Addin.
 
@@ -65,7 +65,7 @@ print(phrases)
 
 ## **Features**
 
--   **Batching**: Applies the prompt to a specified number of rows at a time, with short delays within batches (each row/request) and longer delays between batches. Both the delay duration and the batch size (number of rows/requests per batch) can be customized using the `batch_delay` and `batch_size` parameters. These parameters can be adjusted to meet API rate limits (requests per minute).
+-   **Batching**: Applies the prompt to a specified number of rows at a time, with short delays within batches (each row/request) and longer delays between batches. Both the delay duration and the batch size (number of rows/requests per batch) can be customized using the `batch_delay` and `batch_size` parameters. These parameters can be adjusted to meet API rate limits (e.g., requests per minute).
 
 -   **Resume Progress**: Automatically resumes from the last completed step if the process is interrupted, ensuring continuity and saving resources.
 
