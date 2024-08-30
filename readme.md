@@ -16,7 +16,7 @@ Use cases include natural language processing tasks such as sentiment analysis, 
 
 ## Installation
 
-You can install batchLLM from GitHub using the `devtools` package:
+You can install **batchLLM** from GitHub using the `devtools` package:
 
 ``` r
 install.packages("devtools")
@@ -97,4 +97,12 @@ You can use the `batchLLM_shiny()` Shiny Addin to quickly run batchLLM from the 
 
 ## Contributing
 
-Contribute to batchLLM! Add a new LLM, or expand the Shiny Addin by submitting a pull request.
+Contribute to **batchLLM**. Add a new LLM, or expand the Shiny Addin by submitting a pull request. Here are some features that I would like to add:
+
+-   Add max tokens parameter (variation in default values):
+
+    -   **gemini.R**: maxOutputTokens
+
+    -   **claudeR**: max_tokens
+
+    -   **openai**: max_tokens
