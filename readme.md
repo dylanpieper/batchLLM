@@ -79,7 +79,7 @@ print(phrases)
 
 ### Scraping Metadata
 
-After processing multiple batches, you can use the `scrape_metadata()` function to return the metadata from `batchLLM-log.rds` into a single data frame. You may specific the name of a process column to return only the metadata from that batch (e.g., `scrape_metadata("user_fe2715be")`).
+After processing multiple batches, you can use the `scrape_metadata()` function to return the metadata from `batchLLM-log.rds` into a single data frame. You may specify the name of a process column to return only the metadata from that batch (e.g., `scrape_metadata("user_fe2715be")`).
 
 ### Getting Batches
 
@@ -92,17 +92,14 @@ You can use the `batchLLM_shiny()` Shiny Addin to quickly run batchLLM from the 
 ## Considerations
 
 -   Be aware of your rate limits (e.g., requests per minute). Each row processed is one request. For this reason, premium plans are ideal for batch processing.
-
--   Be aware of which models you have access too via your API key. Some models may have restricted access and throw an error.
+-   Be aware of the models you can access via your API key. Some models may have restricted access and throw an error.
 
 ## Contributing
 
-Contribute to **batchLLM**. Add a new LLM, or expand the Shiny Addin by submitting a pull request. Here are some features that I would like to add:
+Contribute to **batchLLM**. Add a new LLM, or expand the Shiny Addin by submitting a pull request. Here are some features coming soon:
 
+-   Add default for `get_batches()` to get the latest batch if a data frame is not specified.
 -   Add max tokens parameter (variation in default values):
-
-    -   **gemini.R**: maxOutputTokens
-
-    -   **claudeR**: max_tokens
-
-    -   **openai**: max_tokens
+    -  **openai**: max_tokens
+    -  **claudeR**: max_tokens
+    -  **gemini.R**: maxOutputTokens
