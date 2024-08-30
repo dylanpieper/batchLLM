@@ -1,8 +1,7 @@
 #' @title batchLLM
 #'
-#' @description Batch process Large Language Model (LLM) text generation models on data frames with local storage and metadata.
-#' Effortlessly loop across rows of a column and generate text completions with minimal supervision.
-#' The package currently supports OpenAI's GPT, Anthropic's Claude, and Google's Gemini models, with built-in delays for API etiquette.
+#' @description Batch process Large Language Model (LLM) text completions using data frame rows, with automated storage of results and metadata.
+#' The package currently supports OpenAI's GPT, Anthropic's Claude, and Google's Gemini models, with built-in delays for API rate limiting
 #' The package provides advanced text processing features, including automatic logging of batches and metadata to local files, side-by-side comparison of outputs from different LLMs, and integration of a user-friendly Shiny App Addin.
 #' Use cases include natural language processing tasks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation.
 #'
@@ -12,6 +11,7 @@
 #' @param LLM A string for the name of the LLM with the options: "openai", "anthropic", and "google". Default is "openai".
 #' @param model A string for the name of the model from the LLM. Default is "gpt-4o-mini".
 #' @param temperature A temperature for the GPT model. Default is .5.
+#' @param batch_delay A string for the batch delay with the options: "random", "min", and "sec". Numeric examples include "1min" and "30sec". Default is "random".
 #' @param batch_size The number of rows to process in each batch. Default is 10.
 #' @param attempts The maximum number of loop retry attempts. Default is 1.
 #' @param log_name A string for the name of the log without the \code{.rds} file extension. Default is "batchLLM-log".
@@ -75,6 +75,7 @@ batchLLM <- function(df_name,
                      LLM = "openai",
                      model = "gpt-4o-mini",
                      temperature = .5,
+                     batch_delay = "random",
                      batch_size = 10,
                      attempts = 1,
                      log_name = "batchLLM-log",
@@ -83,16 +84,13 @@ batchLLM <- function(df_name,
                      ...) {
   save_progress <- function(df_name, col_name, df, last_batch, total_time, prompt, LLM, model, temperature, new_col_name, status, log_name) {
     log_file <- paste0(log_name, ".rds")
-
     batch_log <- if (file.exists(log_file)) {
       readRDS(log_file)
     } else {
       list(data = list())
     }
-
     param_id <- digest::digest(df[[col_name]], algo = hash_algo)
     df_key <- paste0(df_name, "_", param_id)
-
     if (is.null(batch_log$data[[df_key]])) {
       batch_log$data[[df_key]] <- list(
         output = df,
@@ -108,18 +106,11 @@ batchLLM <- function(df_name,
         )
       )
     }
-
     if (is.null(batch_log$data[[df_key]]$metadata[[new_col_name]])) {
       batch_log$data[[df_key]]$metadata[[new_col_name]] <- list(
-        batches = list(),
-        last_batch = last_batch,
-        total_time = total_time
+        batches = list()
       )
-    } else {
-      batch_log$data[[df_key]]$metadata[[new_col_name]]$last_batch <- last_batch
-      batch_log$data[[df_key]]$metadata[[new_col_name]]$total_time <- total_time
     }
-
     batch_log$data[[df_key]]$metadata[[new_col_name]]$batches[[as.character(last_batch)]] <- list(
       status = status,
       timestamp = Sys.time(),
@@ -129,10 +120,9 @@ batchLLM <- function(df_name,
       model = model,
       temperature = temperature
     )
-
     saveRDS(batch_log, log_file)
   }
-
+  
   load_progress <- function(log_name) {
     log_file <- paste0(log_name, ".rds")
     if (file.exists(log_file)) {
@@ -141,14 +131,13 @@ batchLLM <- function(df_name,
       return(list(data = list()))
     }
   }
-
-  batch_mutate <- function(df, df_col, system_prompt, batch_size, batch_num, batch_total, LLM, model, temperature, rows, log_name, case_convert, ...) {
-    mutate_row <- function(df_row, content_input, system_prompt, LLM, model, temperature, log_name, case_convert, ...) {
+  
+  batch_mutate <- function(df, df_col, system_prompt, batch_size, batch_delay, batch_num, batch_total, LLM, model, temperature, rows, log_name, case_convert, ...) {
+    mutate_row <- function(df_row, content_input, system_prompt, LLM, model, temperature, batch_delay, log_name, case_convert, ...) {
       if (length(content_input) == 1 && !is.na(content_input)) {
         tryCatch(
           {
             content_output <- NULL
-
             if (grepl("openai", LLM)) {
               completion <- create_chat_completion(
                 model = model,
@@ -187,11 +176,9 @@ batchLLM <- function(df_name,
               )
               content_output <- sub(".*<results>(.*?)</results>.*", "\\1", content_output)
             }
-
             if (is.null(content_output)) {
               stop("Failed to obtain content_output. Check API responses and paths.")
             }
-
             if (!is.null(content_output) && length(content_output) > 0) {
               output_text <- content_output[1]
               if (!is.null(case_convert) || case_convert != "none") {
@@ -214,17 +201,15 @@ batchLLM <- function(df_name,
         stop("Invalid input: content_input must be a single non-NA value")
       }
     }
-
+    
     df <- df |> dplyr::mutate(row_number = dplyr::row_number())
-
     total_rows <- nrow(df)
     result <- vector("character", total_rows)
-
     for (i in seq_len(total_rows)) {
       if (!is.na(df_col[i])) {
         result[i] <- tryCatch(
           {
-            mutate_row(df[i, , drop = FALSE], df_col[i], system_prompt, LLM, model, temperature, log_name, case_convert)
+            mutate_row(df[i, , drop = FALSE], df_col[i], system_prompt, LLM, model, temperature, batch_delay, log_name, case_convert)
           },
           error = function(e) {
             stop(paste("Error in batch_mutate:", conditionMessage(e)))
@@ -236,56 +221,65 @@ batchLLM <- function(df_name,
       }
       Sys.sleep(runif(1, min = 0.1, max = 0.3))
     }
-
     if (batch_num < batch_total) {
       message("Taking a break to make the API happy 🤖❤️")
       pb <- txtProgressBar(min = 0, max = 100, style = 3)
+      matches <- regmatches(batch_delay, regexec("(\\d+)(\\w+)", batch_delay))[[1]]
+      delay_value <- as.numeric(matches[2])
+      delay_unit <- matches[3]
+      if (grepl("sec", delay_unit)) {
+        delay <- delay_value / 100
+      } else if (grepl("min", delay_unit)) {
+        delay <- delay_value * 60 / 100
+      } else if (grepl("random", batch_delay)) {
+        delay <- sample(seq(0.05, 0.15, by = 0.01), 1)
+      } else {
+        cat("\n")
+        stop("Invalid unit of time.")
+      }
       for (i in 1:100) {
-        Sys.sleep(runif(1, min = 0.05, max = 0.15))
+        Sys.sleep(delay)
         setTxtProgressBar(pb, i)
-
         if (i %in% c(25, 50, 75)) {
+          cat("\n")
           message(i, "% through the break")
         }
       }
       close(pb)
     }
-
     df$gpt_output <- result
     return(df)
   }
-
+  
   if (!exists(df_name, envir = .GlobalEnv)) {
     stop(paste("Object", df_name, "does not exist in the global environment."))
   }
-
   df <- get(df_name, envir = .GlobalEnv)
-
   if (!is.data.frame(df) || !inherits(df, "data.frame")) {
     stop(paste(df_name, "is not a valid data frame."))
   }
-
   if (!col_name %in% colnames(df)) {
     stop(paste("Column", col_name, "does not exist in", df_name, "."))
   }
-
-  param_id <- digest::digest(list(prompt, LLM, model, temperature, batch_size, attempts, log_name, case_convert), algo = hash_algo)
+  param_id <- digest::digest(list(prompt, LLM, model, temperature, batch_size), algo = hash_algo)
   new_col_name <- paste0(col_name, "_", param_id)
-
   param_id <- digest::digest(df[[col_name]], algo = hash_algo)
   new_df_key <- paste0(df_name, "_", param_id)
-
-  log_file <- paste0(log_name, ".rds")
-  batch_log <- load_progress(log_file)
-
+  batch_log <- load_progress(log_name)
   if (!is.null(batch_log$data) && !is.null(batch_log$data[[new_df_key]])) {
     progress <- batch_log$data[[new_df_key]]
-
     if (!is.null(progress$output) && new_col_name %in% colnames(progress$output)) {
       output <- progress$output
-      last_batch <- progress$metadata[[new_col_name]]$last_batch
-      total_time <- progress$metadata[[new_col_name]]$total_time
-
+      last_batch <- if (!is.null(progress$metadata[[new_col_name]]$batches)) {
+        max(as.numeric(names(progress$metadata[[new_col_name]]$batches)))
+      } else {
+        0
+      }
+      total_time <- if (last_batch > 0) {
+        progress$metadata[[new_col_name]]$batches[[as.character(last_batch)]]$total_time
+      } else {
+        0
+      }
       if (nrow(output) == nrow(df) && !any(is.na(output[[new_col_name]]))) {
         message("All rows have already been processed for this column. No further processing needed.")
         df[[new_col_name]] <- output[[new_col_name]]
@@ -295,6 +289,9 @@ batchLLM <- function(df_name,
           message(paste("Object", new_df_key, "already exists in the global environment."))
         }
         return(invisible(df))
+      }
+      if (last_batch > 0) {
+        message("Resuming from batch ", last_batch + 1)
       }
     } else {
       output <- if (is.null(progress$output)) df else progress$output
@@ -308,53 +305,44 @@ batchLLM <- function(df_name,
     last_batch <- 0
     total_time <- 0
   }
-
   start_time <- Sys.time()
-
   batch_total <- ceiling(nrow(df) / batch_size)
-
   for (batch_num in (last_batch + 1):batch_total) {
     message("Starting batch ", batch_num, " of ", batch_total)
-
     start_row <- (batch_num - 1) * batch_size + 1
     end_row <- min(batch_num * batch_size, nrow(df))
-
     rows_to_process <- which(is.na(output[start_row:end_row, new_col_name])) + start_row - 1
-
     if (length(rows_to_process) == 0) {
       message("Skipping batch ", batch_num, " of ", batch_total, " as all rows are already processed.")
+      last_batch <- batch_num
       next
     }
-
     retry_flag <- TRUE
     counter <- 1
     while (retry_flag && (counter <= attempts)) {
       tryCatch(
         {
           save_progress(df_name, col_name, output, batch_num - 1, total_time, prompt, LLM, model, temperature, new_col_name, "In Progress", log_name)
-
           output_batch <- batch_mutate(df[rows_to_process, , drop = FALSE],
-            df[[col_name]][rows_to_process],
-            system_prompt = prompt,
-            batch_size = length(rows_to_process),
-            batch_num = batch_num,
-            batch_total = batch_total,
-            LLM = LLM,
-            model = model,
-            temperature = temperature,
-            rows = nrow(df),
-            log_name = log_name,
-            case_convert = case_convert
+                                       df[[col_name]][rows_to_process],
+                                       system_prompt = prompt,
+                                       batch_delay = batch_delay,
+                                       batch_size = length(rows_to_process),
+                                       batch_num = batch_num,
+                                       batch_total = batch_total,
+                                       LLM = LLM,
+                                       model = model,
+                                       temperature = temperature,
+                                       rows = nrow(df),
+                                       log_name = log_name,
+                                       case_convert = case_convert
           )
-
           output[rows_to_process, new_col_name] <- output_batch$gpt_output
-
           current_time <- Sys.time()
           time_elapsed_batch <- as.numeric(difftime(current_time, start_time, units = "secs"))
           total_time <- total_time + time_elapsed_batch
-
-          save_progress(df_name, col_name, output, batch_num, total_time, prompt, LLM, model, temperature, new_col_name, "Completed", log_name)
-
+          last_batch <- batch_num
+          save_progress(df_name, col_name, output, last_batch, total_time, prompt, LLM, model, temperature, new_col_name, "Completed", log_name)
           message("Completed batch ", batch_num, " of ", batch_total)
           retry_flag <- FALSE
         },
@@ -370,16 +358,13 @@ batchLLM <- function(df_name,
         }
       )
     }
-
     if (end_row == nrow(df)) {
       message("All ", batch_total, " batches processed")
       break
     }
     start_time <- Sys.time()
   }
-
   assign(df_name, output, envir = .GlobalEnv)
-
   invisible(output)
 }
 
@@ -419,24 +404,35 @@ get_batches <- function(df_name, log_name = "batchLLM-log") {
 #' @export
 scrape_metadata <- function(df_name = NULL, log_name = "batchLLM-log") {
   log_file <- paste0(log_name, ".rds")
-
+  
   if (!file.exists(log_file)) {
-    stop("Log file does not exist.")
+    warning("Log file does not exist yet. Returning an empty data frame.")
+    return(data.frame(
+      df_name = character(),
+      col_name = character(),
+      batch_number = numeric(),
+      status = character(),
+      timestamp = character(),
+      total_time = numeric(),
+      prompt = character(),
+      LLM = character(),
+      model = character(),
+      temperature = numeric(),
+      stringsAsFactors = FALSE
+    ))
   }
-
+  
   batch_log <- readRDS(log_file)
-
+  
   scrape_df <- function(df_name, df_data) {
     if (is.null(df_data$metadata) || length(df_data$metadata) == 0) {
       return(NULL)
     }
-
     metadata_list <- lapply(names(df_data$metadata), function(col_name) {
       column_data <- df_data$metadata[[col_name]]
       if (is.null(column_data$batches) || length(column_data$batches) == 0) {
         return(NULL)
       }
-
       lapply(names(column_data$batches), function(batch_num) {
         batch <- column_data$batches[[batch_num]]
         data.frame(
@@ -454,10 +450,9 @@ scrape_metadata <- function(df_name = NULL, log_name = "batchLLM-log") {
         )
       })
     })
-
     do.call(rbind, unlist(metadata_list, recursive = FALSE))
   }
-
+  
   if (!is.null(df_name)) {
     if (!df_name %in% names(batch_log$data)) {
       message(paste("No data found for", df_name, "in the log file."))

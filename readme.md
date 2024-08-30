@@ -1,8 +1,8 @@
 # batchLLM <img src="inst/batchGPT_hexLogo.png" width="120" align="right"/>
 
-Batch process Large Language Model (LLM) text generation models on data frames with local storage and metadata. Effortlessly loop across rows of a column and generate text completions with minimal supervision.
+Batch process Large Language Model (LLM) text completions using data frame rows, with automated storage of results and metadata.
 
-The package currently supports **OpenAI's GPT**, **Anthropic's Claude**, and **Google's Gemini** models, with built-in delays for API etiquette. The package provides advanced text processing features, including automatic logging of batches and metadata to local files, side-by-side comparison of outputs from different LLMs, and integration of a user-friendly Shiny App Addin.
+The package currently supports **OpenAI's GPT**, **Anthropic's Claude**, and **Google's Gemini** models, with built-in delays for API rate limiting. The package provides advanced text processing features, including automatic logging of batches and metadata to local files, side-by-side comparison of outputs from different LLMs, and integration of a user-friendly Shiny App Addin.
 
 Use cases include natural language processing tasks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation.
 
@@ -27,52 +27,45 @@ devtools::install_github("dylanpieper/batchLLM")
 ## Basic Usage
 
 ``` r
-library(batchLLM) 
+library(batchLLM)
 
 Sys.setenv(OPENAI_API_KEY = "")
 Sys.setenv(ANTHROPIC_API_KEY = "")
 Sys.setenv(GEMINI_API_KEY = "")
 
 phrases <- data.frame(user = c("The world is a sphere, and I love it.", 
-                                  "The world is a sphere, and that is science.", 
-                                  "The world is flat, and round earth is a conspiracy."))
-                                  
-batchLLM(
-  LLM = "openai",
-  model = "gpt-4o-mini",
-  df_name = "phrases",
-  col_name = "user",
-  prompt = "Classify the sentiment using one word: positive, negative, or neutral",
-  case_convert = "lower")
+                               "The world is a sphere, and that is science.", 
+                               "The world is flat, and round earth is a conspiracy."))
 
-batchLLM(
-  LLM = "anthropic",
-  model = "claude-3-haiku-20240307",
-  df_name = "phrases",
-  col_name = "user",
-  prompt = "Classify the sentiment using one word: positive, negative, or neutral",
-  case_convert = "lower")
+llm_configs <- list(
+  list(LLM = "openai", model = "gpt-4o-mini"),
+  list(LLM = "anthropic", model = "claude-3-haiku-20240307"),
+  list(LLM = "google", model = "1.5-flash")
+)
 
-batchLLM(
-  LLM = "google",
-  model = "1.5-flash",
-  df_name = "phrases",
-  col_name = "user",
-  prompt = "Classify the sentiment using one word: positive, negative, or neutral",
-  case_convert = "lower")
+lapply(llm_configs, function(config) {
+  batchLLM(
+    LLM = config$LLM,
+    model = config$model,
+    df_name = "phrases",
+    col_name = "user",
+    prompt = "Classify the sentiment using one word: positive, negative, or neutral",
+    case_convert = "lower"
+  )
+})
 
 print(phrases)
 ```
 
 | user                                                | user_7dd87525 | user_fe2715be | user_e4cb64ba |
-|---------------------|-----------------|-----------------|-----------------|
+|-------------------|------------------|------------------|------------------|
 | The world is a sphere, and I love it.               | positive      | positive      | positive      |
 | The world is a sphere, and that is science.         | neutral       | neutral       | neutral       |
 | The world is flat, and round earth is a conspiracy. | negative      | negative      | negative      |
 
 ## **Features**
 
--   **Batching**: Applies the prompt to a specified number of rows at a time, with short delays within batches and longer delays between batches.
+-   **Batching**: Applies the prompt to a specified number of rows at a time, with short delays within batches (each row/request) and longer delays between batches. Both the delay duration and the batch size (number of rows/requests per batch) can be customized using the `batch_delay` and `batch_size` parameters. These parameters can be adjusted to meet API rate limits (requests per minute).
 
 -   **Resume Progress**: Automatically resumes from the last completed step if the process is interrupted, ensuring continuity and saving resources.
 
@@ -94,9 +87,13 @@ After processing multiple batches, you can use the `get_batches()` function to s
 
 ### Shiny Addin
 
-You can use the `batchLLM_shiny()` Shiny Addin to quickly run batchLLM from the RStudio IDE. It includes interactive inputs and animated progress alert messages.
+You can use the `batchLLM_shiny()` Shiny Addin to quickly run batchLLM from the RStudio IDE. It includes interactive inputs, tables, and animated console messages with verbose feedback.
 
-<https://github.com/user-attachments/assets/364d0d0a-012b-41a5-a5d4-32eb71280037>
+## Considerations
+
+-   Be aware of your rate limits (e.g., requests per minute). Each row processed is one request. For this reason, premium plans are ideal for batch processing.
+
+-   Be aware of which models you have access too via your API key. Some models may have restricted access and throw an error.
 
 ## Contributing
 

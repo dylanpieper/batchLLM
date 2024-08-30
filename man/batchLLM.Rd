@@ -11,6 +11,7 @@ batchLLM(
   LLM = "openai",
   model = "gpt-4o-mini",
   temperature = 0.5,
+  batch_delay = "random",
   batch_size = 10,
   attempts = 1,
   log_name = "batchLLM-log",
@@ -31,6 +32,8 @@ batchLLM(
 \item{model}{A string for the name of the model from the LLM. Default is "gpt-4o-mini".}
 
 \item{temperature}{A temperature for the GPT model. Default is .5.}
+
+\item{batch_delay}{A string for the batch delay with the options: "random", "min", and "sec". Numeric examples include "1min" and "30sec". Default is "random".}
 
 \item{batch_size}{The number of rows to process in each batch. Default is 10.}
 
@@ -74,9 +77,8 @@ Writes the output and metadata to the log file after each batch in a nested list
 }
 }
 \description{
-Batch process Large Language Model (LLM) text generation models on data frames with local storage and metadata.
-Effortlessly loop across rows of a column and generate text completions with minimal supervision.
-The package currently supports OpenAI's GPT, Anthropic's Claude, and Google's Gemini models, with built-in delays for API etiquette.
+Batch process Large Language Model (LLM) text completions using data frame rows, with automated storage of results and metadata.
+The package currently supports OpenAI's GPT, Anthropic's Claude, and Google's Gemini models, with built-in delays for API rate limiting
 The package provides advanced text processing features, including automatic logging of batches and metadata to local files, side-by-side comparison of outputs from different LLMs, and integration of a user-friendly Shiny App Addin.
 Use cases include natural language processing tasks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation.
 }
