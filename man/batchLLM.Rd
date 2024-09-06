@@ -97,7 +97,7 @@ Sys.setenv(ANTHROPIC_API_KEY = "your_anthropic_api_key")
 Sys.setenv(GEMINI_API_KEY = "your_gemini_api_key")
 
 # Create example data frame
-phrases <- data.frame(user = c(
+beliefs <- data.frame(user = c(
   "The world is a sphere, and I love it.",
   "The world is a sphere, and that is science.",
   "The world is flat, and round earth is a conspiracy."
@@ -113,7 +113,7 @@ llm_configs <- list(
 # Apply batchLLM function to each configuration
 phrases <- lapply(llm_configs, function(config) {
   batchLLM(
-    df = phrases,
+    df = beliefs,
     col = user,
     prompt = "Classify the sentiment using one word: positive, negative, or neutral",
     LLM = config$LLM,
@@ -123,6 +123,6 @@ phrases <- lapply(llm_configs, function(config) {
 })[[length(llm_configs)]]
 
 # Print the updated data frame
-print(phrases)
+print(beliefs)
 }
 }
