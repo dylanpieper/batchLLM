@@ -31,34 +31,39 @@ devtools::install_github("dylanpieper/batchLLM")
 ## Basic Usage
 
 ``` r
-library(batchLLM)
+# Set API keys
+Sys.setenv(OPENAI_API_KEY = "your_openai_api_key")
+Sys.setenv(ANTHROPIC_API_KEY = "your_anthropic_api_key")
+Sys.setenv(GEMINI_API_KEY = "your_gemini_api_key")
 
-Sys.setenv(OPENAI_API_KEY = "")
-Sys.setenv(ANTHROPIC_API_KEY = "")
-Sys.setenv(GEMINI_API_KEY = "")
+# Create example data frame
+beliefs <- data.frame(user = c(
+  "The world is a sphere, and I love it.",
+  "The world is a sphere, and that is science.",
+  "The world is flat, and round earth is a conspiracy."
+))
 
-phrases <- data.frame(user = c("The world is a sphere, and I love it.", 
-                               "The world is a sphere, and that is science.", 
-                               "The world is flat, and round earth is a conspiracy."))
-
+# Define LLM configurations
 llm_configs <- list(
   list(LLM = "openai", model = "gpt-4o-mini"),
   list(LLM = "anthropic", model = "claude-3-haiku-20240307"),
   list(LLM = "google", model = "1.5-flash")
 )
 
-lapply(llm_configs, function(config) {
+# Apply batchLLM function to each configuration
+phrases <- lapply(llm_configs, function(config) {
   batchLLM(
+    df = beliefs,
+    col = user,
+    prompt = "Classify the sentiment using one word: positive, negative, or neutral",
     LLM = config$LLM,
     model = config$model,
-    df_name = "phrases",
-    col_name = "user",
-    prompt = "Classify the sentiment using one word: positive, negative, or neutral",
     case_convert = "lower"
   )
-})
+})[[length(llm_configs)]]
 
-print(phrases)
+# Print the updated data frame
+print(beliefs)
 ```
 
 | user                                                | user_7dd87525 | user_fe2715be | user_e4cb64ba |
@@ -104,6 +109,6 @@ Contribute to **batchLLM**. Add a new LLM, or expand the Shiny Addin by submitti
 
 -   Add default for `get_batches()` to get the latest batch if a data frame is not specified.
 -   Add max tokens parameter (variation in default values):
-    -  **openai**: max_tokens
-    -  **claudeR**: max_tokens
-    -  **gemini.R**: maxOutputTokens
+    -   **openai**: max_tokens
+    -   **claudeR**: max_tokens
+    -   **gemini.R**: maxOutputTokens

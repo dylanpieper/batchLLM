@@ -30,9 +30,8 @@ batchLLM_shiny <- function() {
   if (length(all_objects) == 0) {
     beliefs <- data.frame(
       user = c(
-        "The world is a sphere, and I love it.",
-        "The world is a sphere, and that is science.",
-        "The world is flat, and round earth is a conspiracy.",
+        "The Earth is a sphere, as evidenced by observations from space.",
+        "The Earth is flat, and observable evidence of the Earth’s curvature is lacking.",
         "Vaccines are safe and effective.",
         "Vaccines cause more harm than good.",
         "Climate change is real and caused by human activity.",
@@ -49,7 +48,8 @@ batchLLM_shiny <- function() {
         "Human activity is accelerating climate change.",
         "The government is hiding evidence of extraterrestrial life.",
         "The government is transparent about extraterrestrial research.",
-        "Fluoride in water is safe and prevents tooth decay."
+        "Fluoride in water is safe and prevents tooth decay.",
+        "Fluoride in water is harmful and causes health problems."
       )
     )
     df_objects <- "beliefs"
@@ -81,7 +81,7 @@ batchLLM_shiny <- function() {
                 width = 6,
                 solidHeader = TRUE,
                 tags$div(
-                  img(src = "https://raw.githubusercontent.com/dylanpieper/batchLLM/main/inst/batchGPT_hexLogo.png", height = "200px"),
+                  img(src = "https://raw.githubusercontent.com/dylanpieper/batchLLM/main/inst/batchLLM_hexLogo.png", height = "200px"),
                   h1("Welcome!"),
                   h4("Use this Shiny app to batch process Large Language Model (LLM) text completions by looping across the rows of a data frame column. This tool is an efficient solution for handling large datasets with the flexibility to configure multiple models and automate the storage of output and metadata."),
                   br(),
