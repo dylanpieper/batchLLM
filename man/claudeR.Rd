@@ -39,5 +39,5 @@ claudeR(
 The resulting completion up to and excluding the stop sequences.
 }
 \description{
-This function was copied by yrvelez on GitHub (not currently available on CRAN).
+This function was copied from the \href{https://github.com/yrvelez/claudeR}{claudeR} package by \href{https://github.com/yrvelez}{yrvelez} on GitHub (not currently available on CRAN).
 }

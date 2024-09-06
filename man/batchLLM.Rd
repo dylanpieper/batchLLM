@@ -5,8 +5,9 @@
 \title{batchLLM}
 \usage{
 batchLLM(
-  df_name,
-  col_name,
+  df,
+  df_name = NULL,
+  col,
   prompt,
   LLM = "openai",
   model = "gpt-4o-mini",
@@ -21,19 +22,21 @@ batchLLM(
 )
 }
 \arguments{
-\item{df_name}{A string for the name of a data frame.}
+\item{df}{A data frame that contains the input data.}
 
-\item{col_name}{A string for the name of a column.}
+\item{df_name}{An optional string specifying the name of the data frame to log. This is particularly useful in Shiny applications or when the data frame is passed programmatically rather than explicitly. Default is NULL.}
 
-\item{prompt}{A system prompt for the GPT model.}
+\item{col}{The name of the column in the data frame to process.}
+
+\item{prompt}{A system prompt for the LLM model.}
 
 \item{LLM}{A string for the name of the LLM with the options: "openai", "anthropic", and "google". Default is "openai".}
 
 \item{model}{A string for the name of the model from the LLM. Default is "gpt-4o-mini".}
 
-\item{temperature}{A temperature for the GPT model. Default is .5.}
+\item{temperature}{A temperature for the LLM model. Default is .5.}
 
-\item{batch_delay}{A string for the batch delay with the options: "random", "min", and "sec". Numeric examples include "1min" and "30sec". Default is "random".}
+\item{batch_delay}{A string for the batch delay with the options: "random", "min", and "sec". Numeric examples include "1min" and "30sec". Default is "random" which is an average of 10.86 seconds based on 1,000 simulations.}
 
 \item{batch_size}{The number of rows to process in each batch. Default is 10.}
 
@@ -44,62 +47,82 @@ batchLLM(
 \item{hash_algo}{A string for a hashing algorithm from the 'digest' package. Default is \code{crc32c}.}
 
 \item{case_convert}{A string for the case conversion of the output with the options: "upper", "lower", or NULL (no change). Default is NULL.}
+
+\item{...}{Additional arguments to pass on to the LLM API function.}
 }
 \value{
-Assigns a column with a hashed name containing the text completion output.
-Writes the output and metadata to the log file after each batch in a nested list format:
+Returns the input data frame with an additional column containing the text completion output.
+The function also writes the output and metadata to the log file after each batch in a nested list format:
 \itemize{
-  \item \code{data}: A list containing:
-  \itemize{
-    \item \code{phrases_533e145b}: A list representing a tibble with a hashed name:
-    \itemize{
-      \item \code{output}: A tibble with the original text and generated completions.
-      \item \code{metadata}: A list with details for each generated column:
-      \itemize{
-        \item \code{user_2894a19c}: A list representing a generated column with a hashed name:
-        \itemize{
-          \item \code{batches}: A list of lists, each representing a batch, with elements:
-          \itemize{
-            \item \code{batch_number}: The batch number.
-            \item \code{status}: The status of the batch (e.g., "In Progress", "Completed").
-            \item \code{timestamp}: Timestamp of the batch processing.
-            \item \code{total_time}: Total running time in the batches.
-            \item \code{prompt}: The prompt used for the batch.
-            \item \code{model}: The model used for generating completions.
-            \item \code{temperature}: The temperature parameter used.
-          }
-          \item \code{last_batch}: The last successfully completed batch number.
-          \item \code{total_time}: The last total time in the batches.
-        }
-      }
-    }
-  }
+\item \code{data}: A list containing:
+\itemize{
+\item \code{phrases_533e145b}: A list representing a tibble with a hashed name:
+\itemize{
+\item \code{output}: A tibble with the original text and generated completions.
+\item \code{metadata}: A list with details for each generated column:
+\itemize{
+\item \code{user_2894a19c}: A list representing a generated column with a hashed name:
+\itemize{
+\item \code{batches}: A list of lists, each representing a batch, with elements:
+\itemize{
+\item \code{batch_number}: The batch number.
+\item \code{status}: The status of the batch (e.g., "In Progress", "Completed").
+\item \code{timestamp}: Timestamp of the batch processing.
+\item \code{total_time}: Total running time in the batches in seconds.
+\item \code{prompt}: The prompt used for the batch.
+\item \code{model}: The model used for generating completions.
+\item \code{temperature}: The temperature parameter used.
+}
+\item \code{last_batch}: The last successfully completed batch number.
+\item \code{total_time}: The last total time in the batches.
+}
+}
+}
+}
 }
 }
 \description{
 Batch process Large Language Model (LLM) text completions using data frame rows, with automated local storage of output and metadata.
-The package currently supports OpenAI's GPT, Anthropic's Claude, and Google's Gemini models, with built-in delays for API rate limiting
+The package currently supports OpenAI's GPT, Anthropic's Claude, and Google's Gemini models, with built-in delays for API rate limiting.
 The package provides advanced text processing features, including automatic logging of batches and metadata to local files, side-by-side comparison of outputs from different LLMs, and integration of a user-friendly Shiny App Addin.
 Use cases include natural language processing tasks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation.
 }
 \examples{
+\dontrun{
 library(batchLLM)
 
-Sys.setenv(OPENAI_API_KEY = "")
+# Set API keys
+Sys.setenv(OPENAI_API_KEY = "your_openai_api_key")
+Sys.setenv(ANTHROPIC_API_KEY = "your_anthropic_api_key")
+Sys.setenv(GEMINI_API_KEY = "your_gemini_api_key")
 
-phrases <- data.frame(
-  user = c(
-    "The world is a sphere, and I love it.",
-    "The world is a sphere, and that is science.",
-    "The world is flat, and round earth is a conspiracy."
+# Create example data frame
+phrases <- data.frame(user = c(
+  "The world is a sphere, and I love it.",
+  "The world is a sphere, and that is science.",
+  "The world is flat, and round earth is a conspiracy."
+))
+
+# Define LLM configurations
+llm_configs <- list(
+  list(LLM = "openai", model = "gpt-4o-mini"),
+  list(LLM = "anthropic", model = "claude-3-haiku-20240307"),
+  list(LLM = "google", model = "1.5-flash")
+)
+
+# Apply batchLLM function to each configuration
+phrases <- lapply(llm_configs, function(config) {
+  batchLLM(
+    df = phrases,
+    col = user,
+    prompt = "Classify the sentiment using one word: positive, negative, or neutral",
+    LLM = config$LLM,
+    model = config$model,
+    case_convert = "lower"
   )
-)
+})[[length(llm_configs)]]
 
-batchLLM(
-  df_name = "phrases",
-  col_name = "user",
-  prompt = "Classify the sentiment using one word: positive, negative, or neutral"
-)
-
+# Print the updated data frame
 print(phrases)
+}
 }

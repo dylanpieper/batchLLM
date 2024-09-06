@@ -1,10 +1,14 @@
-# batchLLM <img src="inst/batchGPT_hexLogo.png" width="120" align="right"/>
+# batchLLM <img src="inst/batchLLM_hexLogo.png" width="120" align="right"/>
 
-Batch process Large Language Model (LLM) text completions using data frame rows, with automated local storage of output and metadata.
+Batch process Large Language Model (LLM) text completions by looping across the rows of a data frame column. This tool is an efficient solution for handling large datasets with the flexibility to configure multiple models and automate the storage of output and metadata.
 
 The package currently supports **OpenAI's GPT**, **Anthropic's Claude**, and **Google's Gemini** models, with built-in delays for API rate limiting. The package provides advanced text processing features, including automatic logging of batches and metadata to local files, side-by-side comparison of outputs from different LLMs, and integration of a user-friendly Shiny App Addin.
 
 Use cases include natural language processing tasks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation.
+
+## Developer's Note
+
+The initial inspiration for creating this tool came from my work on a complex classification problem involving court data. I faced the challenge of processing thousands of unique offense descriptions, and later, I tested the functionality to classify drug metabolites in toxicology data. The original function evolved significantly, and today, it powers this Shiny app designed to streamline and scale the use of LLMs across various datasets. I hope this tool proves as valuable to you as it has in my own projects.
 
 ## Supported LLMs
 
@@ -98,6 +102,8 @@ You can use the `batchLLM_shiny()` Shiny Addin to quickly run batchLLM from the 
 ## Contributing
 
 Contribute to **batchLLM**. Add a new LLM, or expand the Shiny Addin by submitting a pull request. Here are some features that I would like to add:
+
+-   Add default for `get_batches()` to get the latest batch if a data frame is not specified.
 
 -   Add max tokens parameter (variation in default values):
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/batchLLM_shiny.R
 \name{batchLLM_shiny}
 \alias{batchLLM_shiny}
-\title{batchLLM Shiny Addin}
+\title{Launch a Shiny gadget that provides a user interface for batchLLM().}
 \usage{
 batchLLM_shiny()
 }
