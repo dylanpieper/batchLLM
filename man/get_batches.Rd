@@ -7,7 +7,7 @@
 get_batches(df_name, log_name = "batchLLM-log")
 }
 \arguments{
-\item{df_name}{A string to match the name of a processed \code{data.frame()} or \code{tibble()}.}
+\item{df_name}{A string to match the name of a processed data frame.}
 
 \item{log_name}{A string specifying the name of the log without the \code{.rds} file extension. Default is "batchLLM-log".}
 }

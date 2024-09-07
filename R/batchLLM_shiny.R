@@ -2,8 +2,8 @@
 #' Launch a Shiny gadget that provides a user interface for batchLLM().
 #'
 #' @export
-#' @importFrom shiny fluidPage fluidRow column titlePanel HTML sidebarLayout sidebarPanel
-#' @importFrom shiny textInput numericInput updateTextInput tags br hr h1 h4 img uiOutput textAreaInput
+#' @importFrom shiny fluidPage fluidRow column titlePanel tabPanel tabsetPanel conditionalPanel HTML sidebarLayout sidebarPanel
+#' @importFrom shiny textInput numericInput downloadButton updateTextInput tags br hr h1 h4 img uiOutput textAreaInput
 #' @importFrom shiny sliderInput actionButton icon mainPanel observe req
 #' @importFrom shiny selectInput updateSelectInput renderUI observeEvent
 #' @importFrom shiny runGadget paneViewer fileInput showNotification
@@ -20,43 +20,10 @@
 #' @importFrom readxl read_excel
 #' @importFrom tools file_ext file_path_sans_ext
 batchLLM_shiny <- function() {
-  all_objects <- ls(envir = .GlobalEnv)
+  library(batchLLM)
   
-  df_objects <- Filter(function(x) {
-    obj <- get(x, envir = .GlobalEnv)
-    is.data.frame(obj) || inherits(obj, "data.frame")
-  }, all_objects)
-  
-  if (length(all_objects) == 0) {
-    beliefs <- data.frame(
-      user = c(
-        "The Earth is a sphere, as evidenced by observations from space.",
-        "The Earth is flat, and observable evidence of the Earth’s curvature is lacking.",
-        "Vaccines are safe and effective.",
-        "Vaccines cause more harm than good.",
-        "Climate change is real and caused by human activity.",
-        "Climate change is a hoax.",
-        "The moon landing was real and a great achievement.",
-        "The moon landing was faked.",
-        "5G technology is safe and improves communication.",
-        "5G technology spreads COVID-19.",
-        "Evolution is a well-supported scientific theory.",
-        "Evolution is just a theory and not proven.",
-        "Chemtrails are just contrails from airplanes.",
-        "Chemtrails are chemicals sprayed by the government.",
-        "The earth's climate has always changed naturally.",
-        "Human activity is accelerating climate change.",
-        "The government is hiding evidence of extraterrestrial life.",
-        "The government is transparent about extraterrestrial research.",
-        "Fluoride in water is safe and prevents tooth decay.",
-        "Fluoride in water is harmful and causes health problems."
-      )
-    )
-    df_objects <- "beliefs"
-  } else if (length(df_objects) == 0) {
-    stop("No data frame found in the global environment.")
-  }
-  
+  df_objects <- "beliefs"
+
   ui <- dashboardPage(
     skin = "black",
     dashboardHeader(title = "BatchLLM"),
@@ -64,9 +31,9 @@ batchLLM_shiny <- function() {
       sidebarMenu(
         id = "tabs",
         menuItem("Home", tabName = "home", icon = icon("home")),
-        menuItem("Data", tabName = "data", icon = icon("table"), startExpanded = TRUE),
-        menuItem("Metadata", tabName = "metadata", icon = icon("info-circle")),
-        menuItem("Get Batches", tabName = "batches", icon = icon("list-ol"))
+        menuItem("Run Batches", tabName = "run_batches", icon = icon("table")),
+        menuItem("Get Batches", tabName = "get_batches", icon = icon("list-ol")),
+        menuItem("Download Log", tabName = "download_log", icon = icon("download"))
       )
     ),
     dashboardBody(
@@ -106,7 +73,7 @@ batchLLM_shiny <- function() {
                     shiny::icon("key"),
                     "Google Gemini"
                   ),
-                  br(),br(),
+                  br(), br(),
                   tags$a(
                     href = "https://github.com/dylanpieper/batchLLM",
                     target = "_blank",
@@ -119,7 +86,7 @@ batchLLM_shiny <- function() {
           )
         ),
         tabItem(
-          tabName = "data",
+          tabName = "run_batches",
           fluidRow(
             column(
               width = 4,
@@ -143,7 +110,7 @@ batchLLM_shiny <- function() {
                 textAreaInput(
                   inputId = "prompt",
                   label = "System Prompt:",
-                  placeholder = "What would you like the models to do?",
+                  placeholder = "e.g., classify as a fact or misinformation in one word",
                   rows = 1
                 ),
                 uiOutput("llm_configs"),
@@ -184,24 +151,18 @@ batchLLM_shiny <- function() {
               width = 8,
               box(
                 width = NULL,
-                title = "Results",
+                title = "Viewer",
                 solidHeader = TRUE,
-                DT::dataTableOutput("data_results")
+                tabsetPanel(
+                  tabPanel("Data", DT::dataTableOutput("data_results")),
+                  tabPanel("Metadata", DT::dataTableOutput("metadata_table"))
+                )
               )
             )
           )
         ),
         tabItem(
-          tabName = "metadata",
-          box(
-            width = 12,
-            title = "Metadata",
-            solidHeader = TRUE,
-            DT::dataTableOutput("metadata_table")
-          )
-        ),
-        tabItem(
-          tabName = "batches",
+          tabName = "get_batches",
           fluidRow(
             box(
               width = 12,
@@ -211,6 +172,34 @@ batchLLM_shiny <- function() {
               actionButton("refresh_batches", "Refresh"),
               hr(),
               DT::dataTableOutput("batch_table")
+            )
+          )
+        ),
+        tabItem(
+          tabName = "download_log",
+          fluidRow(
+            box(
+              width = 12,
+              title = "Download Log",
+              solidHeader = TRUE,
+              tabItem(
+                tabName = "download_log",
+                fluidRow(
+                  box(
+                    width = 12,
+                    solidHeader = TRUE,
+                    conditionalPanel(
+                      condition = "output.log_file_exists",
+                      downloadButton("download_rds", "Download RDS"),
+                      downloadButton("download_json", "Download JSON")
+                    ),
+                    conditionalPanel(
+                      condition = "!output.log_file_exists",
+                      h4("No log file available for download.")
+                    )
+                  )
+                )
+              )
             )
           )
         )
@@ -407,15 +396,25 @@ batchLLM_shiny <- function() {
       }
     })
 
+    metadata_trigger <- reactiveVal(0)
+
     current_metadata <- reactive({
+      metadata_trigger()
       req(input$df_name, input$col_name)
       df <- selected_data()
       key <- digest::digest(df[[input$col_name]], algo = "crc32c")
       df_name_key <- paste0(input$df_name, "_", key)
-      scrape_metadata(df_name = df_name_key)
+      return(scrape_metadata(df_name = df_name_key))
+    })
+
+    observeEvent(input$tabs, {
+      if (input$tabs == "metadata") {
+        metadata_trigger(metadata_trigger() + 1)
+      }
     })
 
     result <- reactiveVal(NULL)
+    log_file_exists <- reactiveVal(FALSE)
 
     observeEvent(input$run_batchLLM, {
       req(input$df_name, input$col_name, input$prompt)
@@ -462,7 +461,11 @@ batchLLM_shiny <- function() {
               case_convert = input$case_convert
             )
           }
+          if (file.exists("batchLLM-log.rds")) {
+            log_file_exists(TRUE)
+          }
           result(df)
+          metadata_trigger(metadata_trigger() + 1)
         },
         prefix = ""
       )
@@ -508,7 +511,7 @@ batchLLM_shiny <- function() {
       meta_data <- current_metadata()
 
       if (is.null(meta_data) || nrow(meta_data) == 0) {
-        return(datatable(data.frame(Message = "No metadata available for this data frame.")))
+        return(datatable(data.frame(Message = "No metadata available.")))
       }
 
       datatable(meta_data,
@@ -545,8 +548,13 @@ batchLLM_shiny <- function() {
 
     observeEvent(input$tabs,
       {
-        if (input$tabs == "batches") {
-          update_batch_data()
+        if (input$tabs == "get_batches") {
+          shinyCatch(
+            {
+              update_batch_data()
+            },
+            prefix = ""
+          )
         }
       },
       ignoreInit = TRUE
@@ -582,6 +590,68 @@ batchLLM_shiny <- function() {
         )
       )
     })
+
+    observe({
+      req(input$df_name)
+      updateSelectInput(session, "col_name", selected = names(selected_data())[1])
+    })
+
+    output$log_file_exists <- reactive({
+      log_file_exists()
+    })
+
+    outputOptions(output, "log_file_exists", suspendWhenHidden = FALSE)
+
+    observe({
+      output$download_log_tab <- renderUI({
+        menuItem("Download Log", tabName = "download_log", icon = icon("download"))
+      })
+    })
+
+    observe({
+      if (log_file_exists()) {
+        shinyjs::show("download_rds")
+        shinyjs::show("download_json")
+      } else {
+        shinyjs::hide("download_rds")
+        shinyjs::hide("download_json")
+      }
+    })
+
+    output$download_log_tab <- renderUI({
+      if (log_file_exists()) {
+        menuItem("Download Log", tabName = "download_log", icon = icon("download"))
+      }
+    })
+
+    output$download_rds <- downloadHandler(
+      filename = function() {
+        paste0("batchLLM-log-", Sys.Date(), ".rds")
+      },
+      content = function(file) {
+        log_file <- "batchLLM-log.rds"
+        if (file.exists(log_file)) {
+          file.copy(log_file, file)
+        } else {
+          stop("No log file found to download.")
+        }
+      }
+    )
+
+    output$download_json <- downloadHandler(
+      filename = function() {
+        paste0("batchLLM-log-", Sys.Date(), ".json")
+      },
+      content = function(file) {
+        log_file <- "batchLLM-log.rds"
+        if (file.exists(log_file)) {
+          log_data <- readRDS(log_file)
+          write_json(log_data, path = file, pretty = TRUE, auto_unbox = TRUE)
+        } else {
+          stop("No log file found to download.")
+        }
+      }
+    )
   }
 
   runGadget(ui, server, viewer = paneViewer())

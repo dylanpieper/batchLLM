@@ -29,3 +29,6 @@ Imports:
     shinyjs,
     readr,
     readxl
+Depends: 
+    R (>= 2.10)
+LazyData: true

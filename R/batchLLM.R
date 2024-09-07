@@ -12,7 +12,7 @@
 #' @param LLM A string for the name of the LLM with the options: "openai", "anthropic", and "google". Default is "openai".
 #' @param model A string for the name of the model from the LLM. Default is "gpt-4o-mini".
 #' @param temperature A temperature for the LLM model. Default is .5.
-#' @param batch_delay A string for the batch delay with the options: "random", "min", and "sec". Numeric examples include "1min" and "30sec". Default is "random" which is an average of 10.86 seconds based on 1,000 simulations.
+#' @param batch_delay A string for the batch delay with the options: "random", "min", and "sec". Numeric examples include "1min" and "30sec". Default is "random" which is an average of 10.86 seconds (n = 1,000 simulations).
 #' @param batch_size The number of rows to process in each batch. Default is 10.
 #' @param attempts The maximum number of loop retry attempts. Default is 1.
 #' @param log_name A string for the name of the log without the \code{.rds} file extension. Default is "batchLLM-log".
@@ -21,34 +21,7 @@
 #' @param ... Additional arguments to pass on to the LLM API function.
 #' @return
 #' Returns the input data frame with an additional column containing the text completion output.
-#' The function also writes the output and metadata to the log file after each batch in a nested list format:
-#' \itemize{
-#'   \item \code{data}: A list containing:
-#'   \itemize{
-#'     \item \code{phrases_533e145b}: A list representing a tibble with a hashed name:
-#'     \itemize{
-#'       \item \code{output}: A tibble with the original text and generated completions.
-#'       \item \code{metadata}: A list with details for each generated column:
-#'       \itemize{
-#'         \item \code{user_2894a19c}: A list representing a generated column with a hashed name:
-#'         \itemize{
-#'           \item \code{batches}: A list of lists, each representing a batch, with elements:
-#'           \itemize{
-#'             \item \code{batch_number}: The batch number.
-#'             \item \code{status}: The status of the batch (e.g., "In Progress", "Completed").
-#'             \item \code{timestamp}: Timestamp of the batch processing.
-#'             \item \code{total_time}: Total running time in the batches in seconds.
-#'             \item \code{prompt}: The prompt used for the batch.
-#'             \item \code{model}: The model used for generating completions.
-#'             \item \code{temperature}: The temperature parameter used.
-#'           }
-#'           \item \code{last_batch}: The last successfully completed batch number.
-#'           \item \code{total_time}: The last total time in the batches.
-#'         }
-#'       }
-#'     }
-#'   }
-#' }
+#' The function also writes the output and metadata to the log file after each batch in a nested list format.
 #' @export
 #' @examples
 #' \dontrun{
@@ -59,13 +32,6 @@
 #' Sys.setenv(ANTHROPIC_API_KEY = "your_anthropic_api_key")
 #' Sys.setenv(GEMINI_API_KEY = "your_gemini_api_key")
 #'
-#' # Create example data frame
-#' beliefs <- data.frame(user = c(
-#'   "The world is a sphere, and I love it.",
-#'   "The world is a sphere, and that is science.",
-#'   "The world is flat, and round earth is a conspiracy."
-#' ))
-#'
 #' # Define LLM configurations
 #' llm_configs <- list(
 #'   list(LLM = "openai", model = "gpt-4o-mini"),
@@ -74,13 +40,14 @@
 #' )
 #'
 #' # Apply batchLLM function to each configuration
-#' phrases <- lapply(llm_configs, function(config) {
+#' beliefs <- lapply(llm_configs, function(config) {
 #'   batchLLM(
 #'     df = beliefs,
-#'     col = user,
+#'     col = statement,
 #'     prompt = "Classify the sentiment using one word: positive, negative, or neutral",
 #'     LLM = config$LLM,
 #'     model = config$model,
+#'     batch_delay = "1min",
 #'     case_convert = "lower"
 #'   )
 #' })[[length(llm_configs)]]
@@ -112,7 +79,7 @@ batchLLM <- function(df,
   df_string <- if (!is.null(df_name)) df_name else deparse(substitute(df))
   col <- rlang::enquo(col)
   col_string <- rlang::as_name(col)
-
+  
   save_progress <- function(df, df_string, col_string, last_batch, total_time, prompt, LLM, model, temperature, new_col, status, log_name) {
     log_file <- paste0(log_name, ".rds")
     batch_log <- if (file.exists(log_file)) {
@@ -153,7 +120,7 @@ batchLLM <- function(df,
     )
     saveRDS(batch_log, log_file)
   }
-
+  
   load_progress <- function(log_name) {
     log_file <- paste0(log_name, ".rds")
     if (file.exists(log_file)) {
@@ -162,8 +129,8 @@ batchLLM <- function(df,
       return(list(data = list()))
     }
   }
-
-  batch_mutate <- function(df, df_col, df_string, system_prompt, batch_size, batch_delay, batch_num, batch_total, LLM, model, temperature, rows, log_name, case_convert, ...) {
+  
+  batch_mutate <- function(df, df_col, df_string, system_prompt, batch_size, batch_delay, batch_num, batch_total, LLM, model, temperature, start_row, total_rows, log_name, case_convert, ...) {
     mutate_row <- function(df_string, df_row, content_input, system_prompt, LLM, model, temperature, batch_delay, log_name, case_convert, ...) {
       if (length(content_input) == 1 && !is.na(content_input)) {
         tryCatch(
@@ -232,11 +199,10 @@ batchLLM <- function(df,
         stop("Invalid input: content_input must be a single non-NA value")
       }
     }
-
-    df <- df |> dplyr::mutate(row_number = dplyr::row_number())
-    total_rows <- nrow(df)
-    result <- vector("character", total_rows)
-    for (i in seq_len(total_rows)) {
+    
+    df <- df |> dplyr::mutate(row_number = dplyr::row_number() + start_row - 1)
+    result <- vector("character", nrow(df))
+    for (i in seq_len(nrow(df))) {
       if (!is.na(df_col[i])) {
         result[i] <- tryCatch(
           {
@@ -257,7 +223,7 @@ batchLLM <- function(df,
             stop(paste("Error in batch_mutate:", conditionMessage(e)))
           }
         )
-        message(paste("Processed row", df$row_number[i], "of", rows))
+        message(paste("Processed row", df$row_number[i], "of", total_rows))
       } else {
         message(paste("Skipping row", df$row_number[i], "(NA value)"))
       }
@@ -292,7 +258,7 @@ batchLLM <- function(df,
     df$llm_output <- result
     return(df)
   }
-
+  
   if (!is.data.frame(df) || !inherits(df, "data.frame")) {
     stop("Input must be a valid data frame.")
   }
@@ -381,7 +347,8 @@ batchLLM <- function(df,
             LLM = LLM,
             model = model,
             temperature = temperature,
-            rows = nrow(df),
+            start_row = start_row,
+            total_rows = nrow(df),
             log_name = log_name,
             case_convert = case_convert
           )
@@ -445,7 +412,7 @@ batchLLM <- function(df,
 #'
 #' Get batches of generated output in a single data frame from the \code{.rds} log file.
 #'
-#' @param df_name A string to match the name of a processed \code{data.frame()} or \code{tibble()}.
+#' @param df_name A string to match the name of a processed data frame.
 #' @param log_name A string specifying the name of the log without the \code{.rds} file extension. Default is "batchLLM-log".
 #' @return A data frame containing the generated output.
 #' @export
@@ -479,7 +446,7 @@ scrape_metadata <- function(df_name = NULL, log_name = "batchLLM-log") {
   log_file <- paste0(log_name, ".rds")
 
   if (!file.exists(log_file)) {
-    warning("Log file does not exist yet. Returning an empty data frame.")
+    warning("Log file does not exist.")
     return(data.frame(
       df_name = character(),
       col = character(),

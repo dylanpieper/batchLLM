@@ -36,7 +36,7 @@ batchLLM(
 
 \item{temperature}{A temperature for the LLM model. Default is .5.}
 
-\item{batch_delay}{A string for the batch delay with the options: "random", "min", and "sec". Numeric examples include "1min" and "30sec". Default is "random" which is an average of 10.86 seconds based on 1,000 simulations.}
+\item{batch_delay}{A string for the batch delay with the options: "random", "min", and "sec". Numeric examples include "1min" and "30sec". Default is "random" which is an average of 10.86 seconds (n = 1,000 simulations).}
 
 \item{batch_size}{The number of rows to process in each batch. Default is 10.}
 
@@ -52,34 +52,7 @@ batchLLM(
 }
 \value{
 Returns the input data frame with an additional column containing the text completion output.
-The function also writes the output and metadata to the log file after each batch in a nested list format:
-\itemize{
-\item \code{data}: A list containing:
-\itemize{
-\item \code{phrases_533e145b}: A list representing a tibble with a hashed name:
-\itemize{
-\item \code{output}: A tibble with the original text and generated completions.
-\item \code{metadata}: A list with details for each generated column:
-\itemize{
-\item \code{user_2894a19c}: A list representing a generated column with a hashed name:
-\itemize{
-\item \code{batches}: A list of lists, each representing a batch, with elements:
-\itemize{
-\item \code{batch_number}: The batch number.
-\item \code{status}: The status of the batch (e.g., "In Progress", "Completed").
-\item \code{timestamp}: Timestamp of the batch processing.
-\item \code{total_time}: Total running time in the batches in seconds.
-\item \code{prompt}: The prompt used for the batch.
-\item \code{model}: The model used for generating completions.
-\item \code{temperature}: The temperature parameter used.
-}
-\item \code{last_batch}: The last successfully completed batch number.
-\item \code{total_time}: The last total time in the batches.
-}
-}
-}
-}
-}
+The function also writes the output and metadata to the log file after each batch in a nested list format.
 }
 \description{
 Batch process Large Language Model (LLM) text completions using data frame rows, with automated local storage of output and metadata.
@@ -96,13 +69,6 @@ Sys.setenv(OPENAI_API_KEY = "your_openai_api_key")
 Sys.setenv(ANTHROPIC_API_KEY = "your_anthropic_api_key")
 Sys.setenv(GEMINI_API_KEY = "your_gemini_api_key")
 
-# Create example data frame
-beliefs <- data.frame(user = c(
-  "The world is a sphere, and I love it.",
-  "The world is a sphere, and that is science.",
-  "The world is flat, and round earth is a conspiracy."
-))
-
 # Define LLM configurations
 llm_configs <- list(
   list(LLM = "openai", model = "gpt-4o-mini"),
@@ -111,13 +77,14 @@ llm_configs <- list(
 )
 
 # Apply batchLLM function to each configuration
-phrases <- lapply(llm_configs, function(config) {
+beliefs <- lapply(llm_configs, function(config) {
   batchLLM(
     df = beliefs,
-    col = user,
+    col = statement,
     prompt = "Classify the sentiment using one word: positive, negative, or neutral",
     LLM = config$LLM,
     model = config$model,
+    batch_delay = "1min",
     case_convert = "lower"
   )
 })[[length(llm_configs)]]
