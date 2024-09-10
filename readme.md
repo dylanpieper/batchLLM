@@ -54,6 +54,8 @@ beliefs <- lapply(llm_configs, function(config) {
 print(beliefs)
 ```
 
+## 🤖 Supported LLMs
+
 | LLM | Models |
 |-----|--------|
 | [OpenAI](https://github.com/irudnyts/openai) | gpt-4, gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo |
