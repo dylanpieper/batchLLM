@@ -5,4 +5,5 @@
 ^LICENSE\.md$
 ^readme\.md$
 ^test/
+^.github
 \.rds$

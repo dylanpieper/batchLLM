@@ -3,7 +3,7 @@
 #'
 #' @export
 #' @importFrom shiny fluidPage fluidRow column titlePanel tabPanel tabsetPanel conditionalPanel HTML sidebarLayout sidebarPanel
-#' @importFrom shiny textInput numericInput downloadButton updateTextInput tags br hr h1 h4 img uiOutput textAreaInput
+#' @importFrom shiny textInput numericInput downloadButton updateTextInput tags br hr h1 h4 strong img uiOutput textAreaInput
 #' @importFrom shiny sliderInput actionButton icon mainPanel observe req
 #' @importFrom shiny selectInput updateSelectInput renderUI observeEvent
 #' @importFrom shiny runGadget paneViewer fileInput showNotification
@@ -19,14 +19,41 @@
 #' @importFrom readr read_csv
 #' @importFrom readxl read_excel
 #' @importFrom tools file_ext file_path_sans_ext
+#' @importFrom stats setNames
 batchLLM_shiny <- function() {
   library(batchLLM)
-  
+
   df_objects <- "beliefs"
+  
+  create_exportable_datatable <- function(data, filename_prefix) {
+    datatable(
+      data,
+      extensions = c("Buttons"),
+      options = list(
+        dom = "Blfrtip",
+        buttons = list(
+          list(
+            extend = "collection",
+            buttons = list(
+              list(extend = "csv", filename = paste0(filename_prefix, "_export"), 
+                   exportOptions = list(modifier = list(page = "all"))),
+              list(extend = "excel", filename = paste0(filename_prefix, "_export"), 
+                   exportOptions = list(modifier = list(page = "all"))),
+              list(extend = "pdf", filename = paste0(filename_prefix, "_export"), 
+                   exportOptions = list(modifier = list(page = "all")))
+            ),
+            text = "Download"
+          )
+        ),
+        pageLength = 10,
+        lengthMenu = list(c(10, 25, 50, -1), c("10", "25", "50", "All"))
+      )
+    )
+  }
 
   ui <- dashboardPage(
     skin = "black",
-    dashboardHeader(title = "BatchLLM"),
+    dashboardHeader(title = "batchLLM"),
     dashboardSidebar(
       sidebarMenu(
         id = "tabs",
@@ -50,10 +77,7 @@ batchLLM_shiny <- function() {
                 tags$div(
                   img(src = "https://raw.githubusercontent.com/dylanpieper/batchLLM/main/inst/batchLLM_hexLogo.png", height = "200px"),
                   h1("Welcome!"),
-                  h4("Use this Shiny app to batch process Large Language Model (LLM) text completions by looping across the rows of a data frame column. This tool is an efficient solution for handling large datasets with the flexibility to configure multiple models and automate the storage of output and metadata."),
-                  br(),
-                  h4(tags$strong("Developer's Note:")),
-                  h4("The initial inspiration for creating this tool came from my work on a complex classification problem involving court data. I faced the challenge of processing thousands of unique offense descriptions, and later, I tested the functionality to classify drug metabolites in toxicology data. The original function evolved significantly, and today, it powers this Shiny app designed to streamline and scale the use of LLMs across various datasets. I hope this tool proves as valuable to you as it has in my own projects."),
+                  h4("Batch process Large Language Model (LLM) text completions by looping across the rows of a data frame column. The package currently supports OpenAI's GPT, Anthropic's Claude, and Google's Gemini models, with built-in delays for API rate limiting. The package provides advanced text processing features, including automatic logging of batches and metadata to local files, side-by-side comparison of outputs from different LLMs, and integration of a user-friendly Shiny App Addin. Use cases include natural language processing tasks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation."),
                   br(),
                   tags$a(
                     href = "https://platform.openai.com/login?launch",
@@ -79,6 +103,13 @@ batchLLM_shiny <- function() {
                     target = "_blank",
                     shiny::icon("github"),
                     "GitHub Source Code"
+                  ),
+                  br(),
+                  tags$div(
+                    style = "background-color: #ffcccc; padding: 15px; border-radius: 10px; margin-top: 20px;",
+                    shiny::icon("exclamation-triangle"),
+                    strong("Warning:"),
+                    "This app is hosted with the free version of shinyapps.io. It has limited memory and will time out after 30 minutes. For large batches, it is recommended to run the Shiny app locally in your RStudio IDE using the addin provided in the package."
                   )
                 )
               )
@@ -143,7 +174,7 @@ batchLLM_shiny <- function() {
                 ),
                 actionButton(
                   inputId = "run_batchLLM",
-                  label = "Run BatchLLM"
+                  label = "Run batchLLM"
                 )
               )
             ),
@@ -404,7 +435,11 @@ batchLLM_shiny <- function() {
       df <- selected_data()
       key <- digest::digest(df[[input$col_name]], algo = "crc32c")
       df_name_key <- paste0(input$df_name, "_", key)
-      return(scrape_metadata(df_name = df_name_key))
+      metadata <- scrape_metadata(df_name = df_name_key)
+      if (is.null(metadata) || nrow(metadata) == 0) {
+        return(data.frame(Message = "No metadata available."))
+      }
+      return(metadata)
     })
 
     observeEvent(input$tabs, {
@@ -482,50 +517,13 @@ batchLLM_shiny <- function() {
     })
 
     output$data_results <- renderDataTable({
-      uploaded_data <- selected_data()
-      current_result <- result()
-
-      if (!is.null(current_result) && ncol(current_result) > ncol(uploaded_data)) {
-        data_to_show <- current_result
-      } else if (!identical(uploaded_data, current_result)) {
-        data_to_show <- uploaded_data
-        result(NULL)
-      } else {
-        data_to_show <- if (is.null(current_result)) uploaded_data else current_result
-      }
-
-      datatable(data_to_show,
-        extensions = "Buttons",
-        options = list(
-          dom = "Blfrtip",
-          buttons = list("copy", list(
-            extend = "collection",
-            buttons = c("csv", "excel", "pdf"),
-            text = "Download"
-          ))
-        )
-      )
-    })
-
+      data_to_show <- if (!is.null(result())) result() else selected_data()
+      create_exportable_datatable(data_to_show, "data")
+    }, server = FALSE)
+    
     output$metadata_table <- renderDataTable({
-      meta_data <- current_metadata()
-
-      if (is.null(meta_data) || nrow(meta_data) == 0) {
-        return(datatable(data.frame(Message = "No metadata available.")))
-      }
-
-      datatable(meta_data,
-        extensions = "Buttons",
-        options = list(
-          dom = "Blfrtip",
-          buttons = list("copy", list(
-            extend = "collection",
-            buttons = c("csv", "excel", "pdf"),
-            text = "Download"
-          ))
-        )
-      )
-    })
+      create_exportable_datatable(current_metadata(), "metadata")
+    }, server = FALSE)
 
     current_batch_data <- reactiveVal(NULL)
 
@@ -578,18 +576,8 @@ batchLLM_shiny <- function() {
 
     output$batch_table <- renderDataTable({
       req(current_batch_data())
-      datatable(current_batch_data(),
-        extensions = "Buttons",
-        options = list(
-          dom = "Blfrtip",
-          buttons = list("copy", list(
-            extend = "collection",
-            buttons = c("csv", "excel", "pdf"),
-            text = "Download"
-          ))
-        )
-      )
-    })
+      create_exportable_datatable(current_batch_data(), "batch")
+    }, server = FALSE)
 
     observe({
       req(input$df_name)
@@ -605,6 +593,12 @@ batchLLM_shiny <- function() {
     observe({
       output$download_log_tab <- renderUI({
         menuItem("Download Log", tabName = "download_log", icon = icon("download"))
+      })
+    })
+    
+    observe({
+      observeEvent(input$datafile, {
+        current_metadata()
       })
     })
 

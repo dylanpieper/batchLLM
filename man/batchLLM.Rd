@@ -55,7 +55,7 @@ Returns the input data frame with an additional column containing the text compl
 The function also writes the output and metadata to the log file after each batch in a nested list format.
 }
 \description{
-Batch process Large Language Model (LLM) text completions using data frame rows, with automated local storage of output and metadata.
+Batch process Large Language Model (LLM) text completions by looping across the rows of a data frame column.
 The package currently supports OpenAI's GPT, Anthropic's Claude, and Google's Gemini models, with built-in delays for API rate limiting.
 The package provides advanced text processing features, including automatic logging of batches and metadata to local files, side-by-side comparison of outputs from different LLMs, and integration of a user-friendly Shiny App Addin.
 Use cases include natural language processing tasks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation.
