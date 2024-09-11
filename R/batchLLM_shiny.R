@@ -72,7 +72,7 @@ batchLLM_shiny <- function() {
             column(
               width = 12,
               box(
-                width = 6,
+                width = 8,
                 solidHeader = TRUE,
                 tags$div(
                   img(src = "https://raw.githubusercontent.com/dylanpieper/batchLLM/main/inst/batchLLM_hexLogo.png", height = "200px"),

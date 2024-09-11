@@ -440,9 +440,8 @@ get_batches <- function(df_name = NULL, log_name = "batchLLM-log") {
   batch_log <- readRDS(log_file)
   
   if (is.null(df_name)) {
-    available_dfs <- unique(scrape_metadata()$df)
     stop(paste("You need to define 'df_name' with one of the following names:",
-               paste(available_dfs, collapse = ", ")))
+               paste(unique(scrape_metadata()$df), collapse = ", ")))
   }
   
   if (!df_name %in% names(batch_log$data)) {

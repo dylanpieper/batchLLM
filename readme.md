@@ -16,8 +16,7 @@ Batch process Large Language Model (LLM) text completions by looping across the 
 ## 📦 Installation
 
 ``` r
-install.packages("devtools")
-devtools::install_github("dylanpieper/batchLLM")
+install.packages("batchLLM")
 ```
 
 ## 🛠️ Usage
