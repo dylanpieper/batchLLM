@@ -17,3 +17,18 @@ A data frame containing metadata.
 \description{
 Scrape metadata from the \code{.rds} log file.
 }
+\examples{
+library(batchLLM)
+
+# Scrape metadata for all data frames in the default log file
+all_metadata <- scrape_metadata()
+head(all_metadata)
+
+# Scrape metadata for a specific data frame
+specific_metadata <- scrape_metadata("beliefs_40a3012b")
+head(specific_metadata)
+
+# Use a custom log file name
+custom_metadata <- scrape_metadata(log_name = "custom-log")
+head(custom_metadata)
+}

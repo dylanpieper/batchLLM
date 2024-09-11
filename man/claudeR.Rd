@@ -39,5 +39,42 @@ claudeR(
 The resulting completion up to and excluding the stop sequences.
 }
 \description{
-This function was copied from the \href{https://github.com/yrvelez/claudeR}{claudeR} package by \href{https://github.com/yrvelez}{yrvelez} on GitHub (not currently available on CRAN).
+This function is from the \href{https://github.com/yrvelez/claudeR}{claudeR} repository by \href{https://github.com/yrvelez}{yrvelez} on GitHub (not currently available on CRAN).
+}
+\examples{
+\dontrun{
+library(batchLLM)
+
+# Set API in the env or use api_key parameter in the claudeR call
+Sys.setenv(ANTHROPIC_API_KEY = "your_anthropic_api_key")
+
+# Using Claude-2
+response <- claudeR(
+  prompt = "What is the capital of France?",
+  model = "claude-2.1",
+  max_tokens = 50
+)
+cat(response)
+
+# Using Claude-3
+response <- claudeR(
+  prompt = list(
+    list(role = "user", content = "What is the capital of France?")
+  ),
+  model = "claude-3-5-sonnet-20240620",
+  max_tokens = 50,
+  temperature = 0.8
+)
+cat(response)
+
+# Using a system prompt
+response <- claudeR(
+  prompt = list(
+    list(role = "user", content = "Summarize the history of France in one paragraph.")
+  ),
+  system_prompt = "You are a concise summarization assistant.",
+  max_tokens = 500
+)
+cat(response)
+}
 }

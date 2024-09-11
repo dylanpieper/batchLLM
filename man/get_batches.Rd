@@ -4,7 +4,7 @@
 \alias{get_batches}
 \title{Get batches}
 \usage{
-get_batches(df_name, log_name = "batchLLM-log")
+get_batches(df_name = NULL, log_name = "batchLLM-log")
 }
 \arguments{
 \item{df_name}{A string to match the name of a processed data frame.}
@@ -16,4 +16,15 @@ A data frame containing the generated output.
 }
 \description{
 Get batches of generated output in a single data frame from the \code{.rds} log file.
+}
+\examples{
+library(batchLLM)
+
+# Assuming you have a log file with the default name "batchLLM-log.rds" with data for "beliefs_40a3012b"
+batches <- get_batches("beliefs_40a3012b")
+head(batches)
+
+# Using a custom log file name
+custom_batches <- get_batches("beliefs_40a3012b", log_name = "custom-log.rds")
+head(custom_batches)
 }
