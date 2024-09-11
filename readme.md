@@ -1,29 +1,28 @@
 # batchLLM <img src="inst/batchLLM_hexLogo.png" width="120" align="right"/>
 
-[![GitHub stars](https://img.shields.io/github/stars/dylanpieper/batchLLM?style=social)](https://github.com/dylanpieper/batchLLM/stargazers)
-[![R-CMD-check](https://github.com/dylanpieper/batchLLM/workflows/R-CMD-check/badge.svg)](https://github.com/dylanpieper/batchLLM/actions)
+[![GitHub stars](https://img.shields.io/github/stars/dylanpieper/batchLLM?style=social)](https://github.com/dylanpieper/batchLLM/stargazers) [![R-CMD-check](https://github.com/dylanpieper/batchLLM/workflows/R-CMD-check/badge.svg)](https://github.com/dylanpieper/batchLLM/actions)
 
-Batch process Large Language Model (LLM) text completions by looping across the rows of a data frame column. The package currently supports OpenAI's GPT, Anthropic's Claude, and Google's Gemini models, with built-in delays for API rate limiting. The package provides advanced text processing features, including automatic logging of batches and metadata to local files, side-by-side comparison of outputs from different LLMs, and integration of a user-friendly Shiny App Addin. Use cases include natural language processing tasks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation.
+Batch process Large Language Model (LLM) text completions by looping across the rows of a data frame column.
 
 ## 🚀 Features
 
-- Supports multiple LLMs: OpenAI's GPT, Anthropic's Claude, and Google's Gemini
-- Automatic logging of batches and metadata
-- Side-by-side comparison of outputs from different LLMs
-- User-friendly Shiny App Addin
-- Resumable batch processing
-- Flexible configuration options
+-   Supports multiple LLMs: OpenAI's GPT, Anthropic's Claude, and Google's Gemini
+-   Automatic logging of batches and metadata
+-   Side-by-side comparison of outputs from different LLMs
+-   User-friendly Shiny App Addin
+-   Resumable batch processing
+-   Flexible configuration options
 
 ## 📦 Installation
 
-```r
+``` r
 install.packages("devtools")
 devtools::install_github("dylanpieper/batchLLM")
 ```
 
 ## 🛠️ Usage
 
-```r
+``` r
 library(batchLLM)
 
 # Set up your API keys
@@ -56,42 +55,42 @@ print(beliefs)
 
 ## 🤖 Supported LLMs
 
-| LLM | Models |
-|-----|--------|
-| [OpenAI](https://github.com/irudnyts/openai) | gpt-4, gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo |
+| LLM                                             | Models                                                                                                                        |
+|----------------------------|--------------------------------------------|
+| [OpenAI](https://github.com/irudnyts/openai)    | gpt-4, gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo                                                                        |
 | [Anthropic](https://github.com/yrvelez/claudeR) | claude-3-5-sonnet-20240620, claude-3-opus-20240229, claude-3-sonnet-20240229, claude-3-haiku-20240307, claude-2.1, claude-2.0 |
-| [Google](https://github.com/jhk0530/gemini.R) | 1.5-pro, 1.5-flash, 1.0-pro |
+| [Google](https://github.com/jhk0530/gemini.R)   | 1.5-pro, 1.5-flash, 1.0-pro                                                                                                   |
 
 ## 🧰 Additional Tools
 
-- `scrape_metadata()`: Retrieve metadata from processed batches
-- `get_batches()`: Subset generated output from processed batches
-- `batchLLM_shiny()`: Shiny Addin for interactive use within RStudio IDE
+-   `scrape_metadata()`: Retrieve metadata from processed batches
+-   `get_batches()`: Subset generated output from processed batches
+-   `batchLLM_shiny()`: Shiny Addin for interactive use within RStudio IDE
 
 ## 🌟 Use Cases
 
-- Sentiment analysis
-- Thematic analysis
-- Classification
-- Labeling or tagging
-- Language translation
+-   Sentiment analysis
+-   Thematic analysis
+-   Classification
+-   Labeling or tagging
+-   Language translation
 
 ## ⚠️ Considerations
 
-- Be aware of your API rate limits
-- Check model accessibility with your API key
+-   Be aware of your API rate limits
+-   Check model accessibility with your API key
 
 ## 🤝 Contributing
 
 Contributions are welcome! Here are some upcoming features:
 
-- Default for `get_batches()` to retrieve the latest batch
-- Add max tokens parameter for different LLMs
-- Function to analyze agreement between models
+-   Default for `get_batches()` to retrieve the latest batch
+-   Add max tokens parameter for different LLMs
+-   Function to analyze agreement between models
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](LICENSE.md).
 
 ## 👨‍💻 Developer's Note
 
@@ -99,5 +98,5 @@ The inspiration for creating this tool came from my work on a complex classifica
 
 ## 🔗 Links
 
-- [Demo on ShinyApps.io](https://dylan-pieper.shinyapps.io/BatchLLM/)
-- [Report an Issue](https://github.com/dylanpieper/batchLLM/issues)
+-   [Demo on ShinyApps.io](https://dylan-pieper.shinyapps.io/BatchLLM/)
+-   [Report an Issue](https://github.com/dylanpieper/batchLLM/issues)
