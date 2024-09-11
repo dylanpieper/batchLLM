@@ -3,7 +3,7 @@
 #'
 #' @export
 #' @importFrom shiny fluidPage fluidRow column titlePanel tabPanel tabsetPanel conditionalPanel HTML sidebarLayout sidebarPanel
-#' @importFrom shiny textInput numericInput downloadButton updateTextInput tags br hr h1 h4 img uiOutput textAreaInput
+#' @importFrom shiny textInput numericInput downloadButton updateTextInput tags br hr h1 p img uiOutput textAreaInput
 #' @importFrom shiny sliderInput actionButton icon mainPanel observe req
 #' @importFrom shiny selectInput updateSelectInput renderUI observeEvent
 #' @importFrom shiny runGadget paneViewer fileInput showNotification
@@ -72,12 +72,12 @@ batchLLM_shiny <- function() {
             column(
               width = 12,
               box(
-                width = 8,
+                width = 12,
                 solidHeader = TRUE,
                 tags$div(
                   img(src = "https://raw.githubusercontent.com/dylanpieper/batchLLM/main/inst/batchLLM_hexLogo.png", height = "200px"),
                   h1("Welcome!"),
-                  h4("Batch process Large Language Model (LLM) text completions by looping across the rows of a data frame column. The package currently supports OpenAI's GPT, Anthropic's Claude, and Google's Gemini models, with built-in delays for API rate limiting. The package provides advanced text processing features, including automatic logging of batches and metadata to local files, side-by-side comparison of outputs from different LLMs, and integration of a user-friendly Shiny App Addin. Use cases include natural language processing tasks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation."),
+                  p("Batch process Large Language Model (LLM) text completions by looping across the rows of a data frame column. The package currently supports OpenAI's GPT, Anthropic's Claude, and Google's Gemini models, with built-in delays for API rate limiting. The package provides advanced text processing features, including automatic logging of batches and metadata to local files, side-by-side comparison of outputs from different LLMs, and integration of a user-friendly Shiny App Addin. Use cases include natural language processing tasks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation."),
                   br(),
                   tags$a(
                     href = "https://platform.openai.com/login?launch",
@@ -219,7 +219,7 @@ batchLLM_shiny <- function() {
                     ),
                     conditionalPanel(
                       condition = "!output.log_file_exists",
-                      h4("No log file available for download.")
+                      p("No log file available for download.")
                     )
                   )
                 )
