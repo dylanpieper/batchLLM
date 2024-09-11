@@ -22,7 +22,15 @@
 #' @return
 #' Returns the input data frame with an additional column containing the text completion output.
 #' The function also writes the output and metadata to the log file after each batch in a nested list format.
+#' @importFrom openai create_chat_completion
+#' @importFrom gemini.R gemini_chat
+#' @importFrom utils txtProgressBar setTxtProgressBar
+#' @importFrom stats runif
+#' @importFrom digest digest
+#' @importFrom dplyr mutate left_join row_number rename_with ends_with
+#' @importFrom rlang enquo as_name
 #' @export
+#' 
 #' @examples
 #' \dontrun{
 #' library(batchLLM)
@@ -55,13 +63,6 @@
 #' # Print the updated data frame
 #' print(beliefs)
 #' }
-#' @importFrom openai create_chat_completion
-#' @importFrom gemini.R gemini_chat
-#' @importFrom utils txtProgressBar setTxtProgressBar
-#' @importFrom stats runif
-#' @importFrom digest digest
-#' @importFrom dplyr mutate left_join row_number rename_with ends_with
-#' @importFrom rlang enquo as_name
 batchLLM <- function(df,
                      df_name = NULL,
                      col,
@@ -158,7 +159,7 @@ batchLLM <- function(df,
                 prompt = if (grepl("claude-2", model)) {
                   paste0(system_prompt, "(put response in a single level of XML tags <results>)", ":", as.character(content_input))
                 } else if (grepl("claude-3", model)) {
-                  list(list(role = "user", content = paste0(system_prompt, "(put response in XML tags <results>)", ":", as.character(content_input))))
+                  list(list(role = "user", content = paste0(system_prompt, "(put response in a single level of XML tags <results>)", ":", as.character(content_input))))
                 },
                 model = model,
                 temperature = temperature,
@@ -175,7 +176,7 @@ batchLLM <- function(df,
               content_output <- sub(".*<results>(.*?)</results>.*", "\\1", content_output)
             }
             if (is.null(content_output)) {
-              stop("Failed to obtain content_output. Check API responses and paths.")
+              stop("Failed to obtain content_output.")
             }
             if (!is.null(content_output) && length(content_output) > 0) {
               output_text <- content_output[1]
@@ -416,21 +417,38 @@ batchLLM <- function(df,
 #' @param log_name A string specifying the name of the log without the \code{.rds} file extension. Default is "batchLLM-log".
 #' @return A data frame containing the generated output.
 #' @export
-get_batches <- function(df_name, log_name = "batchLLM-log") {
+#' 
+#' @examples
+#' library(batchLLM)
+#' 
+#' # Assuming you have a log file with the default name "batchLLM-log.rds" with data for "beliefs_40a3012b"
+#' batches <- get_batches("beliefs_40a3012b")
+#' head(batches)
+#'
+#' # Using a custom log file name
+#' custom_batches <- get_batches("beliefs_40a3012b", log_name = "custom-log.rds")
+#' head(custom_batches)
+get_batches <- function(df_name = NULL, log_name = "batchLLM-log") {
   log_file <- paste0(log_name, ".rds")
-
+  
   if (!file.exists(log_file)) {
     stop("Log file does not exist.")
   }
-
+  
   batch_log <- readRDS(log_file)
-
+  
+  if (is.null(df_name)) {
+    available_dfs <- unique(scrape_metadata()$df)
+    stop(paste("You need to define 'df_name' with one of the following names:",
+               paste(available_dfs, collapse = ", ")))
+  }
+  
   if (!df_name %in% names(batch_log$data)) {
     stop(paste0("No data found in ", log_name, ".rds for the specified df_name."))
   }
-
+  
   output <- batch_log$data[[df_name]]$output
-
+  
   return(output)
 }
 
@@ -442,6 +460,21 @@ get_batches <- function(df_name, log_name = "batchLLM-log") {
 #' @param log_name A string specifying the name of the log file without the extension. Default is "batchLLM-log".
 #' @return A data frame containing metadata.
 #' @export
+#' 
+#' @examples
+#' library(batchLLM)
+#' 
+#' # Scrape metadata for all data frames in the default log file
+#' all_metadata <- scrape_metadata()
+#' head(all_metadata)
+#'
+#' # Scrape metadata for a specific data frame
+#' specific_metadata <- scrape_metadata("beliefs_40a3012b")
+#' head(specific_metadata)
+#'
+#' # Use a custom log file name
+#' custom_metadata <- scrape_metadata(log_name = "custom-log")
+#' head(custom_metadata)
 scrape_metadata <- function(df_name = NULL, log_name = "batchLLM-log") {
   log_file <- paste0(log_name, ".rds")
 
@@ -510,7 +543,7 @@ scrape_metadata <- function(df_name = NULL, log_name = "batchLLM-log") {
 
 #' Interact with Anthropic's Claude API
 #'
-#' This function was copied from the [claudeR](https://github.com/yrvelez/claudeR) package by [yrvelez](https://github.com/yrvelez) on GitHub (not currently available on CRAN).
+#' This function is from the [claudeR](https://github.com/yrvelez/claudeR) repository by [yrvelez](https://github.com/yrvelez) on GitHub (not currently available on CRAN).
 #'
 #' @param api_key Your API key for authentication.
 #' @param prompt A string vector for Claude-2, or a list for Claude-3 specifying the input for the model.
@@ -525,6 +558,43 @@ scrape_metadata <- function(df_name = NULL, log_name = "batchLLM-log") {
 #' @importFrom httr add_headers POST content http_status
 #' @importFrom jsonlite fromJSON toJSON
 #' @export
+#' 
+#' @examples
+#' \dontrun{
+#' library(batchLLM)
+#' 
+#' # Set API in the env or use api_key parameter in the claudeR call
+#' Sys.setenv(ANTHROPIC_API_KEY = "your_anthropic_api_key")
+#' 
+#' # Using Claude-2
+#' response <- claudeR(
+#'   prompt = "What is the capital of France?",
+#'   model = "claude-2.1",
+#'   max_tokens = 50
+#' )
+#' cat(response)
+#'
+#' # Using Claude-3
+#' response <- claudeR(
+#'   prompt = list(
+#'     list(role = "user", content = "What is the capital of France?")
+#'   ),
+#'   model = "claude-3-5-sonnet-20240620",
+#'   max_tokens = 50,
+#'   temperature = 0.8
+#' )
+#' cat(response)
+#'
+#' # Using a system prompt
+#' response <- claudeR(
+#'   prompt = list(
+#'     list(role = "user", content = "Summarize the history of France in one paragraph.")
+#'   ),
+#'   system_prompt = "You are a concise summarization assistant.",
+#'   max_tokens = 500
+#' )
+#' cat(response)
+#' }
 claudeR <- function(
     prompt, model = "claude-3-5-sonnet-20240620", max_tokens = 100,
     stop_sequences = NULL,

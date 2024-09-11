@@ -84,7 +84,6 @@ print(beliefs)
 
 Contributions are welcome! Here are some upcoming features:
 
--   Default for `get_batches()` to retrieve the latest batch
 -   Add max tokens parameter for different LLMs
 -   Function to analyze agreement between models
 
