@@ -18,13 +18,15 @@ A data frame containing the generated output.
 Get batches of generated output in a single data frame from the \code{.rds} log file.
 }
 \examples{
+\dontrun{
 library(batchLLM)
 
-# Assuming you have a log file with the default name "batchLLM-log.rds" with data for "beliefs_40a3012b"
+# Assuming you have a log file with data for "beliefs_40a3012b" (see batchLLM example)
 batches <- get_batches("beliefs_40a3012b")
 head(batches)
 
 # Using a custom log file name
 custom_batches <- get_batches("beliefs_40a3012b", log_name = "custom-log.rds")
 head(custom_batches)
+}
 }

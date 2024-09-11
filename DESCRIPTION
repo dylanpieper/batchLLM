@@ -1,6 +1,6 @@
 Package: batchLLM
 Type: Package
-Title: Batch process LLM text completions using a data frame
+Title: Batch Process LLM Text Completions Using a Data Frame
 Version: 1.0.0
 Authors@R: person("Dylan", "Pieper", email = "dylanpieper@gmail.com", role = c("aut", "cre", "cph"))
 Maintainer: Dylan Pieper <dylanpieper@gmail.com>
