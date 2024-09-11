@@ -3,7 +3,7 @@
 #'
 #' @export
 #' @importFrom shiny fluidPage fluidRow column titlePanel tabPanel tabsetPanel conditionalPanel HTML sidebarLayout sidebarPanel
-#' @importFrom shiny textInput numericInput downloadButton updateTextInput tags br hr h1 h4 strong img uiOutput textAreaInput
+#' @importFrom shiny textInput numericInput downloadButton updateTextInput tags br hr h1 h4 img uiOutput textAreaInput
 #' @importFrom shiny sliderInput actionButton icon mainPanel observe req
 #' @importFrom shiny selectInput updateSelectInput renderUI observeEvent
 #' @importFrom shiny runGadget paneViewer fileInput showNotification
@@ -103,13 +103,6 @@ batchLLM_shiny <- function() {
                     target = "_blank",
                     shiny::icon("github"),
                     "GitHub Source Code"
-                  ),
-                  br(),
-                  tags$div(
-                    style = "background-color: #ffcccc; padding: 15px; border-radius: 10px; margin-top: 20px;",
-                    shiny::icon("exclamation-triangle"),
-                    strong("Warning:"),
-                    "This app is hosted with the free version of shinyapps.io. It has limited memory and will time out after 30 minutes. For large batches, it is recommended to run the Shiny app locally in your RStudio IDE using the addin provided in the package."
                   )
                 )
               )
