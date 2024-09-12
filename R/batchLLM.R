@@ -1,6 +1,6 @@
 #' @title Batch Process LLM Text Completions Using a Data Frame
 #'
-#' @description Batch process Large Language Model (LLM) text completions by looping across the rows of a data frame column.
+#' @description Batch process large language model (LLM) text completions by looping across the rows of a data frame column.
 #' The package currently supports OpenAI's GPT, Anthropic's Claude, and Google's Gemini models, with built-in delays for API rate limiting.
 #' The package provides advanced text processing features, including automatic logging of batches and metadata to local files, side-by-side comparison of outputs from different LLMs, and integration of a user-friendly Shiny App Addin.
 #' Use cases include natural language processing tasks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation.

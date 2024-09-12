@@ -2,7 +2,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/dylanpieper/batchLLM?style=social)](https://github.com/dylanpieper/batchLLM/stargazers) [![R-CMD-check](https://github.com/dylanpieper/batchLLM/workflows/R-CMD-check/badge.svg)](https://github.com/dylanpieper/batchLLM/actions)
 
-Batch process Large Language Model (LLM) text completions by looping across the rows of a data frame column.
+Batch process large language model (LLM) text completions by looping across the rows of a data frame column.
 
 ## 🚀 Features
 
