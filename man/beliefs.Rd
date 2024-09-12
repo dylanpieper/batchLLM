@@ -14,7 +14,7 @@ A data frame with 20 rows and 1 variable:
 beliefs
 }
 \description{
-The \code{beliefs} dataset consists of 20 statements representing opposing views on various scientific, environmental, and societal topics.
+The beliefs dataset consists of 20 statements representing opposing views on various scientific, environmental, and societal topics.
 }
 \examples{
 head(beliefs)

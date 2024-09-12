@@ -2,7 +2,7 @@
 % Please edit documentation in R/batchLLM.R
 \name{scrape_metadata}
 \alias{scrape_metadata}
-\title{Scrape metadata}
+\title{Scrape Metadata}
 \usage{
 scrape_metadata(df_name = NULL, log_name = "batchLLM-log")
 }

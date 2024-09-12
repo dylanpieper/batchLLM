@@ -2,7 +2,7 @@
 % Please edit documentation in R/batchLLM.R
 \name{batchLLM}
 \alias{batchLLM}
-\title{batchLLM}
+\title{Batch Process LLM Text Completions Using a Data Frame}
 \usage{
 batchLLM(
   df,

@@ -1,4 +1,4 @@
-#' @title batchLLM
+#' @title Batch Process LLM Text Completions Using a Data Frame
 #'
 #' @description Batch process Large Language Model (LLM) text completions by looping across the rows of a data frame column.
 #' The package currently supports OpenAI's GPT, Anthropic's Claude, and Google's Gemini models, with built-in delays for API rate limiting.
@@ -409,9 +409,9 @@ batchLLM <- function(df,
   return(output)
 }
 
-#' Get batches
+#' @title Get Batches
 #'
-#' Get batches of generated output in a single data frame from the \code{.rds} log file.
+#' @description Get batches of generated output in a single data frame from the \code{.rds} log file.
 #'
 #' @param df_name A string to match the name of a processed data frame.
 #' @param log_name A string specifying the name of the log without the \code{.rds} file extension. Default is "batchLLM-log".
@@ -453,9 +453,9 @@ get_batches <- function(df_name = NULL, log_name = "batchLLM-log") {
   return(output)
 }
 
-#' Scrape metadata
+#' @title Scrape Metadata
 #'
-#' Scrape metadata from the \code{.rds} log file.
+#' @description Scrape metadata from the \code{.rds} log file.
 #'
 #' @param df_name Optional. A string to match the name of a processed data frame.
 #' @param log_name A string specifying the name of the log file without the extension. Default is "batchLLM-log".
@@ -542,16 +542,16 @@ scrape_metadata <- function(df_name = NULL, log_name = "batchLLM-log") {
   }
 }
 
-#' Interact with Anthropic's Claude API
+#' @title Interact with Anthropic's Claude API
 #'
-#' This function is from the [claudeR](https://github.com/yrvelez/claudeR) repository by [yrvelez](https://github.com/yrvelez) on GitHub (not currently available on CRAN).
+#' @description This function is from the [claudeR](https://github.com/yrvelez/claudeR) repository by [yrvelez](https://github.com/yrvelez) on GitHub (not currently available on CRAN).
 #'
 #' @param api_key Your API key for authentication.
 #' @param prompt A string vector for Claude-2, or a list for Claude-3 specifying the input for the model.
 #' @param model The model to use for the request. Default is the latest Claude-3 model.
 #' @param max_tokens A maximum number of tokens to generate before stopping.
 #' @param stop_sequences Optional. A list of strings upon which to stop generating.
-#' @param temperature Optional.Amount of randomness injected into the response.
+#' @param temperature Optional. Amount of randomness injected into the response.
 #' @param top_k Optional. Only sample from the top K options for each subsequent token.
 #' @param top_p Optional. Does nucleus sampling.
 #' @param system_prompt Optional. An optional system role specification.

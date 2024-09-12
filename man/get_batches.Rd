@@ -2,7 +2,7 @@
 % Please edit documentation in R/batchLLM.R
 \name{get_batches}
 \alias{get_batches}
-\title{Get batches}
+\title{Get Batches}
 \usage{
 get_batches(df_name = NULL, log_name = "batchLLM-log")
 }

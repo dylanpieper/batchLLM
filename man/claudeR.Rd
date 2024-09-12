@@ -25,7 +25,7 @@ claudeR(
 
 \item{stop_sequences}{Optional. A list of strings upon which to stop generating.}
 
-\item{temperature}{Optional.Amount of randomness injected into the response.}
+\item{temperature}{Optional. Amount of randomness injected into the response.}
 
 \item{top_k}{Optional. Only sample from the top K options for each subsequent token.}
 

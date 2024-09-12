@@ -1,5 +1,4 @@
-#'
-#' Launch a Shiny gadget that provides a user interface for batchLLM().
+#' @title Interact with batchLLM via a Shiny Gadget
 #'
 #' @export
 #' @importFrom shiny fluidPage fluidRow column titlePanel tabPanel tabsetPanel conditionalPanel HTML sidebarLayout sidebarPanel
@@ -122,7 +121,7 @@ batchLLM_shiny <- function() {
               ),
               box(
                 width = NULL,
-                title = "Configure BatchLLM",
+                title = "Configure batchLLM",
                 solidHeader = TRUE,
                 pickerInput(
                   inputId = "df_name",
