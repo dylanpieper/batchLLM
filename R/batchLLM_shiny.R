@@ -29,6 +29,7 @@ batchLLM_shiny <- function() {
       data,
       extensions = c("Buttons"),
       options = list(
+        scrollX = T,
         dom = "Blfrtip",
         buttons = list(
           list(
