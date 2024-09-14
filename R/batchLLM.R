@@ -30,7 +30,7 @@
 #' @importFrom dplyr mutate left_join row_number rename_with ends_with
 #' @importFrom rlang enquo as_name
 #' @export
-#' 
+#'
 #' @examples
 #' \dontrun{
 #' library(batchLLM)
@@ -52,7 +52,7 @@
 #'   batchLLM(
 #'     df = beliefs,
 #'     col = statement,
-#'     prompt = "Classify the sentiment using one word: positive, negative, or neutral",
+#'     prompt = "classify as a fact or misinformation in one word",
 #'     LLM = config$LLM,
 #'     model = config$model,
 #'     batch_delay = "1min",
@@ -80,7 +80,7 @@ batchLLM <- function(df,
   df_string <- if (!is.null(df_name)) df_name else deparse(substitute(df))
   col <- rlang::enquo(col)
   col_string <- rlang::as_name(col)
-  
+
   save_progress <- function(df, df_string, col_string, last_batch, total_time, prompt, LLM, model, temperature, new_col, status, log_name) {
     log_file <- paste0(log_name, ".rds")
     batch_log <- if (file.exists(log_file)) {
@@ -121,7 +121,7 @@ batchLLM <- function(df,
     )
     saveRDS(batch_log, log_file)
   }
-  
+
   load_progress <- function(log_name) {
     log_file <- paste0(log_name, ".rds")
     if (file.exists(log_file)) {
@@ -130,8 +130,8 @@ batchLLM <- function(df,
       return(list(data = list()))
     }
   }
-  
-  batch_mutate <- function(df, df_col, df_string, system_prompt, batch_size, batch_delay, batch_num, batch_total, LLM, model, temperature, start_row, total_rows, log_name, case_convert, ...) {
+
+  batch_mutate <- function(df, df_col, df_string, col_string, system_prompt, batch_size, batch_delay, batch_num, batch_total, LLM, model, temperature, start_row, total_rows, log_name, case_convert, ...) {
     mutate_row <- function(df_string, df_row, content_input, system_prompt, LLM, model, temperature, batch_delay, log_name, case_convert, ...) {
       if (length(content_input) == 1 && !is.na(content_input)) {
         tryCatch(
@@ -200,7 +200,7 @@ batchLLM <- function(df,
         stop("Invalid input: content_input must be a single non-NA value")
       }
     }
-    
+
     df <- df |> dplyr::mutate(row_number = dplyr::row_number() + start_row - 1)
     result <- vector("character", nrow(df))
     for (i in seq_len(nrow(df))) {
@@ -259,12 +259,12 @@ batchLLM <- function(df,
     df$llm_output <- result
     return(df)
   }
-  
+
   if (!is.data.frame(df) || !inherits(df, "data.frame")) {
     stop("Input must be a valid data frame.")
   }
-  if (!rlang::as_name(col) %in% colnames(df)) {
-    stop(paste("Column", rlang::as_name(col), "does not exist in the input data frame."))
+  if (!col_string %in% colnames(df)) {
+    stop(paste("Column", col_string, "does not exist in the input data frame."))
   }
   param_id <- digest::digest(list(prompt, LLM, model, temperature, batch_size), algo = hash_algo)
   new_col <- paste0(col_string, "_", param_id)
@@ -338,8 +338,9 @@ batchLLM <- function(df,
           )
           output_batch <- batch_mutate(
             df = df[rows_to_process, , drop = FALSE],
-            df_col = df[[rlang::as_name(col)]][rows_to_process],
+            df_col = df[[col_string]][rows_to_process],
             df_string = df_string,
+            col_string = col_string,
             system_prompt = prompt,
             batch_size = length(rows_to_process),
             batch_delay = batch_delay,
@@ -417,11 +418,11 @@ batchLLM <- function(df,
 #' @param log_name A string specifying the name of the log without the \code{.rds} file extension. Default is "batchLLM-log".
 #' @return A data frame containing the generated output.
 #' @export
-#' 
+#'
 #' @examples
 #' \dontrun{
 #' library(batchLLM)
-#' 
+#'
 #' # Assuming you have a log file with data for "beliefs_40a3012b" (see batchLLM example)
 #' batches <- get_batches("beliefs_40a3012b")
 #' head(batches)
@@ -432,24 +433,26 @@ batchLLM <- function(df,
 #' }
 get_batches <- function(df_name = NULL, log_name = "batchLLM-log") {
   log_file <- paste0(log_name, ".rds")
-  
+
   if (!file.exists(log_file)) {
     stop("Log file does not exist.")
   }
-  
+
   batch_log <- readRDS(log_file)
-  
+
   if (is.null(df_name)) {
-    stop(paste("You need to define 'df_name' with one of the following names:",
-               paste(unique(scrape_metadata()$df), collapse = ", ")))
+    stop(paste(
+      "You need to define 'df_name' with one of the following names:",
+      paste(unique(scrape_metadata()$df), collapse = ", ")
+    ))
   }
-  
+
   if (!df_name %in% names(batch_log$data)) {
     stop(paste0("No data found in ", log_name, ".rds for the specified df_name."))
   }
-  
+
   output <- batch_log$data[[df_name]]$output
-  
+
   return(output)
 }
 
@@ -461,10 +464,10 @@ get_batches <- function(df_name = NULL, log_name = "batchLLM-log") {
 #' @param log_name A string specifying the name of the log file without the extension. Default is "batchLLM-log".
 #' @return A data frame containing metadata.
 #' @export
-#' 
+#'
 #' @examples
 #' library(batchLLM)
-#' 
+#'
 #' # Scrape metadata for all data frames in the default log file
 #' all_metadata <- scrape_metadata()
 #' head(all_metadata)
@@ -559,14 +562,14 @@ scrape_metadata <- function(df_name = NULL, log_name = "batchLLM-log") {
 #' @importFrom httr add_headers POST content http_status
 #' @importFrom jsonlite fromJSON toJSON
 #' @export
-#' 
+#'
 #' @examples
 #' \dontrun{
 #' library(batchLLM)
-#' 
+#'
 #' # Set API in the env or use api_key parameter in the claudeR call
 #' Sys.setenv(ANTHROPIC_API_KEY = "your_anthropic_api_key")
-#' 
+#'
 #' # Using Claude-2
 #' response <- claudeR(
 #'   prompt = "What is the capital of France?",
