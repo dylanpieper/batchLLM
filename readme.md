@@ -41,7 +41,7 @@ beliefs <- lapply(llm_configs, function(config) {
   batchLLM(
     df = beliefs,
     col = statement,
-    prompt = "Classify the sentiment using one word: positive, negative, or neutral",
+    prompt = "classify as a fact or misinformation in one word",
     LLM = config$LLM,
     model = config$model,
     batch_delay = "1min",
