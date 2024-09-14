@@ -44,6 +44,7 @@ beliefs <- lapply(llm_configs, function(config) {
     prompt = "classify as a fact or misinformation in one word",
     LLM = config$LLM,
     model = config$model,
+    batch_size = 10,
     batch_delay = "1min",
     case_convert = "lower"
   )
