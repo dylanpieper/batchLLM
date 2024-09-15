@@ -44,7 +44,7 @@ batchLLM(
 
 \item{batch_size}{The number of rows to process in each batch. Default is 10.}
 
-\item{extract_XML}{Extract the LLM text completion from the model's response by returning only content returned in XML tags. This helps prevent unwanted text (e.g., preamble) from being included in the model's output. Default is TRUE.}
+\item{extract_XML}{Extract the LLM text completion from the model's response by returning only content in \code{<result>} XML tags. This helps prevent unwanted text (e.g., preamble) from being included in the model's output. Default is TRUE.}
 
 \item{attempts}{The maximum number of loop retry attempts. Default is 1.}
 

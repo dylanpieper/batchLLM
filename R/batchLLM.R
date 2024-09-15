@@ -15,7 +15,7 @@
 #' @param max_tokens A maximum number of tokens to generate before stopping. Default is 500.
 #' @param batch_delay A string for the batch delay with the options: "random", "min", and "sec". Numeric examples include "1min" and "30sec". Default is "random" which is an average of 10.86 seconds (n = 1,000 simulations).
 #' @param batch_size The number of rows to process in each batch. Default is 10.
-#' @param extract_XML Extract the LLM text completion from the model's response by returning only content returned in XML tags. This helps prevent unwanted text (e.g., preamble) from being included in the model's output. Default is TRUE.
+#' @param extract_XML Extract the LLM text completion from the model's response by returning only content in \code{<result>} XML tags. This helps prevent unwanted text (e.g., preamble) from being included in the model's output. Default is TRUE.
 #' @param attempts The maximum number of loop retry attempts. Default is 1.
 #' @param log_name A string for the name of the log without the \code{.rds} file extension. Default is "batchLLM-log".
 #' @param hash_algo A string for a hashing algorithm from the 'digest' package. Default is \code{crc32c}.
