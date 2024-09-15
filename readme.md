@@ -15,8 +15,17 @@ Batch process large language model (LLM) text completions by looping across the 
 
 ## 📦 Installation
 
+CRAN:
+
 ``` r
 install.packages("batchLLM")
+```
+
+GitHub:
+
+``` r
+install.packages("devtools")
+devtools::install_github("dylanpieper/batchLLM")
 ```
 
 ## 🛠️ Usage
@@ -57,7 +66,7 @@ print(beliefs)
 ## 🤖 Supported LLMs
 
 | LLM                                             | Models                                                                                                                        |
-|----------------------------|--------------------------------------------|
+|---------------|---------------------------------------------------------|
 | [OpenAI](https://github.com/irudnyts/openai)    | gpt-4, gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo                                                                        |
 | [Anthropic](https://github.com/yrvelez/claudeR) | claude-3-5-sonnet-20240620, claude-3-opus-20240229, claude-3-sonnet-20240229, claude-3-haiku-20240307, claude-2.1, claude-2.0 |
 | [Google](https://github.com/jhk0530/gemini.R)   | 1.5-pro, 1.5-flash, 1.0-pro                                                                                                   |
