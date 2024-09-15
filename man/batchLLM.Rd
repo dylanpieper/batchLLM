@@ -12,8 +12,10 @@ batchLLM(
   LLM = "openai",
   model = "gpt-4o-mini",
   temperature = 0.5,
+  max_tokens = 500,
   batch_delay = "random",
   batch_size = 10,
+  extract_XML = TRUE,
   attempts = 1,
   log_name = "batchLLM-log",
   hash_algo = "crc32c",
@@ -36,9 +38,13 @@ batchLLM(
 
 \item{temperature}{A temperature for the LLM model. Default is .5.}
 
+\item{max_tokens}{A maximum number of tokens to generate before stopping. Default is 500.}
+
 \item{batch_delay}{A string for the batch delay with the options: "random", "min", and "sec". Numeric examples include "1min" and "30sec". Default is "random" which is an average of 10.86 seconds (n = 1,000 simulations).}
 
 \item{batch_size}{The number of rows to process in each batch. Default is 10.}
+
+\item{extract_XML}{Extract the LLM text completion from the model's response by returning only content returned in XML tags. This helps prevent unwanted text (e.g., preamble) from being included in the model's output. Default is TRUE.}
 
 \item{attempts}{The maximum number of loop retry attempts. Default is 1.}
 
@@ -55,7 +61,7 @@ Returns the input data frame with an additional column containing the text compl
 The function also writes the output and metadata to the log file after each batch in a nested list format.
 }
 \description{
-Batch process Large Language Model (LLM) text completions by looping across the rows of a data frame column.
+Batch process large language model (LLM) text completions by looping across the rows of a data frame column.
 The package currently supports OpenAI's GPT, Anthropic's Claude, and Google's Gemini models, with built-in delays for API rate limiting.
 The package provides advanced text processing features, including automatic logging of batches and metadata to local files, side-by-side comparison of outputs from different LLMs, and integration of a user-friendly Shiny App Addin.
 Use cases include natural language processing tasks such as sentiment analysis, thematic analysis, classification, labeling or tagging, and language translation.
@@ -81,9 +87,10 @@ beliefs <- lapply(llm_configs, function(config) {
   batchLLM(
     df = beliefs,
     col = statement,
-    prompt = "Classify the sentiment using one word: positive, negative, or neutral",
+    prompt = "classify as a fact or misinformation in one word",
     LLM = config$LLM,
     model = config$model,
+    batch_size = 10,
     batch_delay = "1min",
     case_convert = "lower"
   )

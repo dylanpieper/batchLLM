@@ -44,6 +44,7 @@ beliefs <- lapply(llm_configs, function(config) {
     prompt = "classify as a fact or misinformation in one word",
     LLM = config$LLM,
     model = config$model,
+    max_tokens = 100,
     batch_size = 10,
     batch_delay = "1min",
     case_convert = "lower"
@@ -82,9 +83,8 @@ print(beliefs)
 
 ## 🤝 Contributing
 
-Contributions are welcome! Here are some upcoming features:
+Contributions are welcome! Here are some features ideas:
 
--   Add max tokens parameter for different LLMs
 -   Function to analyze agreement between models
 
 ## 📄 License

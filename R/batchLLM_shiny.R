@@ -2,7 +2,7 @@
 #'
 #' @export
 #' @importFrom shiny fluidPage fluidRow column titlePanel tabPanel tabsetPanel conditionalPanel HTML sidebarLayout sidebarPanel
-#' @importFrom shiny textInput numericInput downloadButton updateTextInput tags br hr h1 p img uiOutput textAreaInput
+#' @importFrom shiny textInput numericInput downloadButton updateTextInput tags br hr h1 h6 p img uiOutput textAreaInput
 #' @importFrom shiny sliderInput actionButton icon mainPanel observe req
 #' @importFrom shiny selectInput updateSelectInput renderUI observeEvent
 #' @importFrom shiny runGadget paneViewer fileInput showNotification
@@ -23,7 +23,7 @@ batchLLM_shiny <- function() {
   library(batchLLM)
 
   df_objects <- "beliefs"
-  
+
   create_exportable_datatable <- function(data, filename_prefix) {
     datatable(
       data,
@@ -35,12 +35,18 @@ batchLLM_shiny <- function() {
           list(
             extend = "collection",
             buttons = list(
-              list(extend = "csv", filename = paste0(filename_prefix, "_export"), 
-                   exportOptions = list(modifier = list(page = "all"))),
-              list(extend = "excel", filename = paste0(filename_prefix, "_export"), 
-                   exportOptions = list(modifier = list(page = "all"))),
-              list(extend = "pdf", filename = paste0(filename_prefix, "_export"), 
-                   exportOptions = list(modifier = list(page = "all")))
+              list(
+                extend = "csv", filename = paste0(filename_prefix, "_export"),
+                exportOptions = list(modifier = list(page = "all"))
+              ),
+              list(
+                extend = "excel", filename = paste0(filename_prefix, "_export"),
+                exportOptions = list(modifier = list(page = "all"))
+              ),
+              list(
+                extend = "pdf", filename = paste0(filename_prefix, "_export"),
+                exportOptions = list(modifier = list(page = "all"))
+              )
             ),
             text = "Download"
           )
@@ -147,10 +153,11 @@ batchLLM_shiny <- function() {
                 radioGroupButtons(
                   inputId = "toggle_delay",
                   label = "Batch Delay:",
-                  choices = c("Random (~10 Sec)" = "random", "30 Sec" = "30sec", "1 Min" = "1min"),
+                  choices = c("Random" = "random", "30 Sec" = "30sec", "1 Min" = "1min"),
                   selected = "random",
                   justified = TRUE
                 ),
+                h6("Random is an average of 10.86 seconds."),
                 numericInput(
                   inputId = "batch_size",
                   label = "Batch Size (Rows per Batch):",
@@ -318,6 +325,14 @@ batchLLM_shiny <- function() {
             value = config$temperature,
             step = 0.1
           ),
+          sliderInput(
+            inputId = paste0(config$id, "_max_tokens"),
+            label = "Maximum Tokens:",
+            min = 100,
+            max = 4000,
+            value = 500,
+            step = 50
+          ),
           actionButton(
             inputId = paste0("remove_", config$id),
             label = "Remove LLM"
@@ -451,7 +466,8 @@ batchLLM_shiny <- function() {
         list(
           LLM = input[[paste0(config$id, "_llm")]],
           model = input[[paste0(config$id, "_model")]],
-          temperature = input[[paste0(config$id, "_temperature")]]
+          temperature = input[[paste0(config$id, "_temperature")]],
+          max_tokens = input[[paste0(config$id, "_max_tokens")]]
         )
       })
 
@@ -486,6 +502,7 @@ batchLLM_shiny <- function() {
               batch_size = input$batch_size,
               model = config$model,
               temperature = config$temperature,
+              max_tokens = config$max_tokens,
               case_convert = input$case_convert
             )
           }
@@ -509,14 +526,20 @@ batchLLM_shiny <- function() {
       })
     })
 
-    output$data_results <- renderDataTable({
-      data_to_show <- if (!is.null(result())) result() else selected_data()
-      create_exportable_datatable(data_to_show, "data")
-    }, server = FALSE)
-    
-    output$metadata_table <- renderDataTable({
-      create_exportable_datatable(current_metadata(), "metadata")
-    }, server = FALSE)
+    output$data_results <- renderDataTable(
+      {
+        data_to_show <- if (!is.null(result())) result() else selected_data()
+        create_exportable_datatable(data_to_show, "data")
+      },
+      server = FALSE
+    )
+
+    output$metadata_table <- renderDataTable(
+      {
+        create_exportable_datatable(current_metadata(), "metadata")
+      },
+      server = FALSE
+    )
 
     current_batch_data <- reactiveVal(NULL)
 
@@ -567,10 +590,13 @@ batchLLM_shiny <- function() {
       current_batch_data(batch_data)
     })
 
-    output$batch_table <- renderDataTable({
-      req(current_batch_data())
-      create_exportable_datatable(current_batch_data(), "batch")
-    }, server = FALSE)
+    output$batch_table <- renderDataTable(
+      {
+        req(current_batch_data())
+        create_exportable_datatable(current_batch_data(), "batch")
+      },
+      server = FALSE
+    )
 
     observe({
       req(input$df_name)
@@ -588,7 +614,7 @@ batchLLM_shiny <- function() {
         menuItem("Download Log", tabName = "download_log", icon = icon("download"))
       })
     })
-    
+
     observe({
       observeEvent(input$datafile, {
         current_metadata()
