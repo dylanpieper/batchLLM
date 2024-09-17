@@ -2,7 +2,7 @@
 #'
 #' @export
 #' @importFrom shiny fluidPage fluidRow column titlePanel tabPanel tabsetPanel conditionalPanel HTML sidebarLayout sidebarPanel
-#' @importFrom shiny textInput numericInput downloadButton updateTextInput tags br hr h1 h6 p img uiOutput textAreaInput
+#' @importFrom shiny textInput numericInput downloadButton updateTextInput tags tagList br hr h1 p span img uiOutput textAreaInput
 #' @importFrom shiny sliderInput actionButton icon mainPanel observe req
 #' @importFrom shiny selectInput updateSelectInput renderUI observeEvent
 #' @importFrom shiny runGadget paneViewer fileInput showNotification
@@ -14,7 +14,7 @@
 #' @importFrom shinyjs useShinyjs toggle hidden show hide
 #' @importFrom rlang sym eval_tidy
 #' @importFrom digest digest
-#' @importFrom spsComps shinyCatch
+#' @importFrom spsComps shinyCatch bsTooltip
 #' @importFrom readr read_csv
 #' @importFrom readxl read_excel
 #' @importFrom tools file_ext file_path_sans_ext
@@ -56,6 +56,17 @@ batchLLM_shiny <- function() {
       )
     )
   }
+  
+  labelWithInfo <- function(label, tooltip) {
+    tagList(
+      span(label),
+      span(
+        style = "margin-left: 5px;",
+        icon("info-circle") |>
+          bsTooltip(tooltip, placement = "right")
+      )
+    )
+  }
 
   ui <- dashboardPage(
     skin = "black",
@@ -88,26 +99,26 @@ batchLLM_shiny <- function() {
                   tags$a(
                     href = "https://platform.openai.com/login?launch",
                     target = "_blank",
-                    shiny::icon("key"),
+                    icon("key"),
                     "OpenAI"
                   ),
                   tags$a(
                     href = "https://console.anthropic.com/",
                     target = "_blank",
-                    shiny::icon("key"),
+                    icon("key"),
                     "Anthropic"
                   ),
                   tags$a(
                     href = "https://gemini.google.com/",
                     target = "_blank",
-                    shiny::icon("key"),
+                    icon("key"),
                     "Google Gemini"
                   ),
                   br(), br(),
                   tags$a(
                     href = "https://github.com/dylanpieper/batchLLM",
                     target = "_blank",
-                    shiny::icon("github"),
+                    icon("github"),
                     "GitHub Source Code"
                   )
                 )
@@ -152,15 +163,14 @@ batchLLM_shiny <- function() {
                 uiOutput("api_key_inputs"),
                 radioGroupButtons(
                   inputId = "toggle_delay",
-                  label = "Batch Delay:",
+                  label = labelWithInfo("Batch Delay:", "Delay between batches. Random is an average of 10.86 seconds."),
                   choices = c("Random" = "random", "30 Sec" = "30sec", "1 Min" = "1min"),
                   selected = "random",
                   justified = TRUE
                 ),
-                h6("Random is an average of 10.86 seconds."),
                 numericInput(
                   inputId = "batch_size",
-                  label = "Batch Size (Rows per Batch):",
+                  label = labelWithInfo("Batch Size:", "Number of rows processed per batch."),
                   value = 10,
                   min = 1,
                   step = 1
@@ -460,7 +470,18 @@ batchLLM_shiny <- function() {
     log_file_exists <- reactiveVal(FALSE)
 
     observeEvent(input$run_batchLLM, {
-      req(input$df_name, input$col_name, input$prompt)
+      req(input$df_name, input$col_name)
+
+      if (is.null(input$prompt) || trimws(input$prompt) == "") {
+        showNotification("Please enter a system prompt.", type = "error")
+        return()
+      }
+
+      configs <- llm_configs()
+      if (length(configs) == 0) {
+        showNotification("Please add at least one LLM configuration.", type = "error")
+        return()
+      }
 
       configs <- lapply(llm_configs(), function(config) {
         list(
