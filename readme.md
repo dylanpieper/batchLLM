@@ -102,7 +102,7 @@ This project is licensed under the [MIT License](LICENSE.md).
 
 ## 👨‍💻 Developer's Note
 
-The inspiration for creating this tool came from my work on a complex classification problem involving court data. I faced the challenge of processing thousands of unique offense descriptions, and later, I tested the functionality to classify drug metabolites in toxicology data. The original function evolved significantly, and today, it powers this Shiny app designed to streamline and scale the use of LLMs across various datasets. I hope this tool proves as valuable to you as it has in my own projects.
+My work on a complex classification problem inspired me to create this tool. I faced the challenge of categorizing thousands of unique offense descriptions in court data, and later, I tested the functionality to classify drug metabolites in toxicology data. The original function evolved significantly, and today, it powers this Shiny app designed to streamline and scale the use of LLMs across various datasets. I hope this tool proves as valuable to you as it has in my own projects.
 
 ## 🔗 Links
 
