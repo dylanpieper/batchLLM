@@ -15,13 +15,13 @@ Batch process large language model (LLM) text completions by looping across the 
 
 ## 📦 Installation
 
-CRAN:
+Production (CRAN):
 
 ``` r
 install.packages("batchLLM")
 ```
 
-GitHub:
+Development (GitHub):
 
 ``` r
 install.packages("devtools")

@@ -56,7 +56,7 @@ batchLLM_shiny <- function() {
       )
     )
   }
-  
+
   labelWithInfo <- function(label, tooltip) {
     tagList(
       span(label),
@@ -133,7 +133,7 @@ batchLLM_shiny <- function() {
               width = 4,
               box(
                 width = NULL,
-                title = "Upload Data File",
+                title = "Upload Data",
                 solidHeader = TRUE,
                 fileInput("datafile", "Choose CSV or Excel File", accept = c(".csv", ".xlsx"))
               ),
@@ -143,7 +143,7 @@ batchLLM_shiny <- function() {
                 solidHeader = TRUE,
                 pickerInput(
                   inputId = "df_name",
-                  label = "Select Data:",
+                  label = "Data:",
                   choices = df_objects,
                   options = list(`live-search` = TRUE)
                 ),
@@ -180,6 +180,13 @@ batchLLM_shiny <- function() {
                   label = "Convert Text Case:",
                   choices = c("None" = "none", "Uppercase" = "upper", "Lowercase" = "lower"),
                   selected = "none",
+                  justified = TRUE
+                ),
+                radioGroupButtons(
+                  inputId = "extract_XML",
+                  label = labelWithInfo("XML Extract:", "Requests a response in XML tags and removes unwanted text and preamble. May produce an unintended XML structure in longer responses."),
+                  choices = c("False" = "FALSE", "True" = "TRUE"),
+                  selected = "FALSE",
                   justified = TRUE
                 ),
                 actionButton(
@@ -253,11 +260,14 @@ batchLLM_shiny <- function() {
       session$userData$beliefs <- beliefs
     }
 
-    all_objects <- reactive({
-      c(ls(envir = .GlobalEnv), ls(envir = session$userData))
-    })
+    all_objects <- reactiveVal(c())
 
     observe({
+      req(input$datafile)
+
+      current_objects <- c(ls(envir = .GlobalEnv), ls(envir = session$userData))
+      all_objects(current_objects)
+
       df_objects <- Filter(function(x) {
         obj <- if (exists(x, envir = session$userData)) {
           get(x, envir = session$userData)
@@ -265,7 +275,7 @@ batchLLM_shiny <- function() {
           get(x, envir = .GlobalEnv)
         }
         is.data.frame(obj) || inherits(obj, "data.frame")
-      }, all_objects())
+      }, current_objects)
 
       updatePickerInput(
         session = session,
@@ -281,7 +291,7 @@ batchLLM_shiny <- function() {
       df <- switch(ext,
         csv = readr::read_csv(file),
         xlsx = readxl::read_excel(file),
-        stop("Invalid file; Please upload a .csv or .xlsx file")
+        showNotification("Invalid file. Please upload a .csv or .xlsx file.", type = "error")
       )
       df_name <- file_path_sans_ext(input$datafile$name)
       session$userData[[df_name]] <- df
@@ -445,6 +455,18 @@ batchLLM_shiny <- function() {
       }
     })
 
+    observeEvent(input$datafile, {
+      req(input$datafile)
+      df <- selected_data()
+      if (!is.null(df) && ncol(df) > 0) {
+        updatePickerInput(
+          session = session,
+          inputId = "col_name",
+          selected = names(df)[1]
+        )
+      }
+    })
+
     metadata_trigger <- reactiveVal(0)
 
     current_metadata <- reactive({
@@ -471,6 +493,16 @@ batchLLM_shiny <- function() {
 
     observeEvent(input$run_batchLLM, {
       req(input$df_name, input$col_name)
+
+      if (is.null(input$col_name) || input$col_name == "") {
+        showNotification("Please select a column from the dataset.", type = "error")
+        return()
+      }
+
+      if (is.null(input$batch_size) || input$batch_size < 1) {
+        showNotification("Please enter a valid batch size (> 1).", type = "error")
+        return()
+      }
 
       if (is.null(input$prompt) || trimws(input$prompt) == "") {
         showNotification("Please enter a system prompt.", type = "error")
@@ -521,6 +553,7 @@ batchLLM_shiny <- function() {
               prompt = input$prompt,
               batch_delay = input$toggle_delay,
               batch_size = input$batch_size,
+              extract_XML = as.logical(input$extract_XML),
               model = config$model,
               temperature = config$temperature,
               max_tokens = config$max_tokens,
@@ -549,7 +582,14 @@ batchLLM_shiny <- function() {
 
     output$data_results <- renderDataTable(
       {
-        data_to_show <- if (!is.null(result())) result() else selected_data()
+        data_to_show <- if (!is.null(input$datafile)) {
+          selected_data()
+        } else if (!is.null(result())) {
+          result()
+        } else {
+          selected_data()
+        }
+
         create_exportable_datatable(data_to_show, "data")
       },
       server = FALSE

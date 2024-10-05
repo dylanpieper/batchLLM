@@ -39,7 +39,8 @@ claudeR(
 The resulting completion up to and excluding the stop sequences.
 }
 \description{
-This function is from the \href{https://github.com/yrvelez/claudeR}{claudeR} repository by \href{https://github.com/yrvelez}{yrvelez} on GitHub (not currently available on CRAN).
+This function provides an interface to interact with Claude AI models via Anthropic's API, allowing for flexible text generation based on user inputs.
+This function was adapted from the \href{https://github.com/yrvelez/claudeR}{claudeR} repository by \href{https://github.com/yrvelez}{yrvelez} on GitHub (MIT License).
 }
 \examples{
 \dontrun{

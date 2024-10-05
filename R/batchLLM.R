@@ -76,7 +76,7 @@ batchLLM <- function(df,
                      max_tokens = 500,
                      batch_delay = "random",
                      batch_size = 10,
-                     extract_XML = TRUE,
+                     extract_XML = FALSE,
                      attempts = 1,
                      log_name = "batchLLM-log",
                      hash_algo = "crc32c",
@@ -490,7 +490,7 @@ get_batches <- function(df_name = NULL, log_name = "batchLLM-log") {
   }
 
   if (!df_name %in% names(batch_log$data)) {
-    stop(paste0("No data found in ", log_name, ".rds for the specified df_name."))
+    stop(paste0("No data found in ", log_name, ".rds for the specified df_name"))
   }
 
   output <- batch_log$data[[df_name]]$output
@@ -589,8 +589,9 @@ scrape_metadata <- function(df_name = NULL, log_name = "batchLLM-log") {
 
 #' @title Interact with Anthropic's Claude API
 #'
-#' @description This function is from the [claudeR](https://github.com/yrvelez/claudeR) repository by [yrvelez](https://github.com/yrvelez) on GitHub (not currently available on CRAN).
-#'
+#' @description This function provides an interface to interact with Claude AI models via Anthropic's API, allowing for flexible text generation based on user inputs.
+#' This function was adapted from the [claudeR](https://github.com/yrvelez/claudeR) repository by [yrvelez](https://github.com/yrvelez) on GitHub (MIT License).
+#' 
 #' @param api_key Your API key for authentication.
 #' @param prompt A string vector for Claude-2, or a list for Claude-3 specifying the input for the model.
 #' @param model The model to use for the request. Default is the latest Claude-3 model.

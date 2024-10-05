@@ -15,7 +15,7 @@ batchLLM(
   max_tokens = 500,
   batch_delay = "random",
   batch_size = 10,
-  extract_XML = TRUE,
+  extract_XML = FALSE,
   attempts = 1,
   log_name = "batchLLM-log",
   hash_algo = "crc32c",
