@@ -1,7 +1,7 @@
 #' @title Interact with batchLLM via a Shiny Gadget
 #'
-#' @description This function provides a Shiny-based user interface to interact with 
-#' the `batchLLM` package. It allows users to configure and execute batch processing 
+#' @description This function provides a Shiny-based user interface to interact with
+#' the `batchLLM` package. It allows users to configure and execute batch processing
 #' through an interactive dashboard.
 #'
 #' @export
@@ -30,7 +30,6 @@
 #' @importFrom jsonlite write_json
 #' @import batchLLM
 batchLLM_shiny <- function() {
-  
   df_objects <- "beliefs"
 
   create_exportable_datatable <- function(data, filename_prefix) {

@@ -161,7 +161,7 @@ batchLLM <- function(df,
   batch_mutate <- function(df, df_col, df_string, col_string, system_prompt, batch_size, batch_delay, batch_num, batch_total, LLM, model, temperature, start_row, total_rows, log_name, case_convert, max_tokens, extract_XML, ...) {
     build_prompt <- function(system_prompt, content_input, extract_XML) {
       if (extract_XML) {
-        paste0(system_prompt, "(put response in a single level of XML tags <results>):", as.character(content_input))
+        paste0(system_prompt, "(put your response in a single level of XML tags <results></results> and continue in plain text):", as.character(content_input))
       } else {
         paste0(system_prompt, ":", as.character(content_input))
       }
@@ -591,7 +591,7 @@ scrape_metadata <- function(df_name = NULL, log_name = "batchLLM-log") {
 #'
 #' @description This function provides an interface to interact with Claude AI models via Anthropic's API, allowing for flexible text generation based on user inputs.
 #' This function was adapted from the [claudeR](https://github.com/yrvelez/claudeR) repository by [yrvelez](https://github.com/yrvelez) on GitHub (MIT License).
-#' 
+#'
 #' @param api_key Your API key for authentication.
 #' @param prompt A string vector for Claude-2, or a list for Claude-3 specifying the input for the model.
 #' @param model The model to use for the request. Default is the latest Claude-3 model.
@@ -643,14 +643,14 @@ scrape_metadata <- function(df_name = NULL, log_name = "batchLLM-log") {
 #' cat(response)
 #' }
 claudeR <- function(
-    prompt, 
-    model = "claude-3-5-sonnet-20240620", 
+    prompt,
+    model = "claude-3-5-sonnet-20240620",
     max_tokens = 500,
     stop_sequences = NULL,
-    temperature = .7, 
-    top_k = -1, 
+    temperature = .7,
+    top_k = -1,
     top_p = -1,
-    api_key = NULL, 
+    api_key = NULL,
     system_prompt = NULL) {
   if (grepl("claude-3", model) && !is.list(prompt)) {
     stop("Claude-3 requires the input in a list format, e.g., list(list(role = \"user\", content = \"What is the capital of France?\"))")
