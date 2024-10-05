@@ -4,8 +4,6 @@
 #' the `batchLLM` package. It allows users to configure and execute batch processing
 #' through an interactive dashboard.
 #'
-#' @export
-#'
 #' @importFrom shiny fluidPage fluidRow column titlePanel tabPanel tabsetPanel
 #' @importFrom shiny conditionalPanel HTML sidebarLayout sidebarPanel mainPanel
 #' @importFrom shiny textInput numericInput downloadButton updateTextInput
@@ -29,6 +27,7 @@
 #' @importFrom stats setNames
 #' @importFrom jsonlite write_json
 #' @import batchLLM
+#' @export
 batchLLM_shiny <- function() {
   df_objects <- "beliefs"
 
