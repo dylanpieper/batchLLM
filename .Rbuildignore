@@ -8,3 +8,4 @@
 ^.github
 \.rds$
 ^cran-comments\.md$
+^NEWS\.md$
