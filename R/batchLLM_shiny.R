@@ -1,14 +1,22 @@
 #' @title Interact with batchLLM via a Shiny Gadget
 #'
+#' @description This function provides a Shiny-based user interface to interact with 
+#' the `batchLLM` package. It allows users to configure and execute batch processing 
+#' through an interactive dashboard.
+#'
 #' @export
-#' @importFrom shiny fluidPage fluidRow column titlePanel tabPanel tabsetPanel conditionalPanel HTML sidebarLayout sidebarPanel
-#' @importFrom shiny textInput numericInput downloadButton updateTextInput tags tagList br hr h1 p span img uiOutput textAreaInput
-#' @importFrom shiny sliderInput actionButton icon mainPanel observe req
-#' @importFrom shiny selectInput updateSelectInput renderUI observeEvent
-#' @importFrom shiny runGadget paneViewer fileInput showNotification
+#'
+#' @importFrom shiny fluidPage fluidRow column titlePanel tabPanel tabsetPanel
+#' @importFrom shiny conditionalPanel HTML sidebarLayout sidebarPanel mainPanel
+#' @importFrom shiny textInput numericInput downloadButton updateTextInput
+#' @importFrom shiny tags tagList br hr h1 p span img uiOutput textAreaInput
+#' @importFrom shiny sliderInput actionButton icon observe req
+#' @importFrom shiny downloadHandler outputOptions selectInput updateSelectInput
+#' @importFrom shiny renderUI observeEvent runGadget paneViewer fileInput
+#' @importFrom shiny showNotification reactive reactiveVal
 #' @importFrom shinydashboard dashboardPage dashboardHeader dashboardSidebar
-#' @importFrom shinydashboard sidebarMenu menuItem dashboardBody tabItems
-#' @importFrom shinydashboard tabItem box
+#' @importFrom shinydashboard sidebarMenu menuItem dashboardBody tabItems tabItem
+#' @importFrom shinydashboard box
 #' @importFrom shinyWidgets pickerInput updatePickerInput radioGroupButtons
 #' @importFrom DT dataTableOutput renderDataTable datatable
 #' @importFrom shinyjs useShinyjs toggle hidden show hide
@@ -19,9 +27,10 @@
 #' @importFrom readxl read_excel
 #' @importFrom tools file_ext file_path_sans_ext
 #' @importFrom stats setNames
+#' @importFrom jsonlite write_json
+#' @import batchLLM
 batchLLM_shiny <- function() {
-  library(batchLLM)
-
+  
   df_objects <- "beliefs"
 
   create_exportable_datatable <- function(data, filename_prefix) {
@@ -256,8 +265,8 @@ batchLLM_shiny <- function() {
   )
 
   server <- function(input, output, session) {
-    if (exists("beliefs")) {
-      session$userData$beliefs <- beliefs
+    if (!exists("beliefs")) {
+      session$userData$beliefs <- batchLLM::beliefs
     }
 
     all_objects <- reactiveVal(c())

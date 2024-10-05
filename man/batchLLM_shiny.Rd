@@ -7,5 +7,7 @@
 batchLLM_shiny()
 }
 \description{
-Interact with batchLLM via a Shiny Gadget
+This function provides a Shiny-based user interface to interact with
+the \code{batchLLM} package. It allows users to configure and execute batch processing
+through an interactive dashboard.
 }
