@@ -1,6 +1,6 @@
 #' @title Interact with batchLLM via a Shiny Gadget
 #'
-#' @description This function provides a Shiny-based user interface to interact with
+#' @description This function provides a user interface using Shiny to interact with
 #' the `batchLLM` package. It allows users to configure and execute batch processing
 #' through an interactive dashboard.
 #'
