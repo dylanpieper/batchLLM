@@ -56,7 +56,8 @@ beliefs <- lapply(llm_configs, function(config) {
     max_tokens = 100,
     batch_size = 10,
     batch_delay = "1min",
-    case_convert = "lower"
+    case_convert = "lower",
+    sanitize = TRUE
   )
 })[[length(llm_configs)]]
 
@@ -66,7 +67,7 @@ print(beliefs)
 ## 🤖 Supported LLMs
 
 | LLM                                             | Models                                                                                                                        |
-|---------------|---------------------------------------------------------|
+|---------------------|---------------------------------------------------|
 | [OpenAI](https://github.com/irudnyts/openai)    | gpt-4, gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo                                                                        |
 | [Anthropic](https://github.com/yrvelez/claudeR) | claude-3-5-sonnet-20240620, claude-3-opus-20240229, claude-3-sonnet-20240229, claude-3-haiku-20240307, claude-2.1, claude-2.0 |
 | [Google](https://github.com/jhk0530/gemini.R)   | 1.5-pro, 1.5-flash, 1.0-pro                                                                                                   |
@@ -82,6 +83,7 @@ print(beliefs)
 -   Sentiment analysis
 -   Thematic analysis
 -   Classification
+-   Re-factoring
 -   Labeling or tagging
 -   Language translation
 
@@ -102,7 +104,7 @@ This project is licensed under the [MIT License](LICENSE.md).
 
 ## 👨‍💻 Developer's Note
 
-My work on a complex classification problem inspired me to create this tool. I faced the challenge of categorizing thousands of unique offense descriptions in court data, and later, I tested the functionality to classify drug metabolites in toxicology data. The original function evolved significantly, and today, it powers this Shiny app designed to streamline and scale the use of LLMs across various datasets. I hope this tool proves as valuable to you as it has in my own projects.
+My work on a complex classification problem inspired me to create this tool. I was challenged with categorizing thousands of unique offense descriptions in court data, and later, I tested the functionality to classify drug metabolites to their drug categories in toxicology data. The original function evolved significantly, and today, it powers this Shiny app designed to streamline and scale the use of LLMs across various datasets. I hope this tool proves as valuable to you as it has in my own projects.
 
 ## 🔗 Links
 

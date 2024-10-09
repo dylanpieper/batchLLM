@@ -6,6 +6,9 @@
 \usage{
 batchLLM_shiny()
 }
+\value{
+No return value. Launches a Shiny Gadget that allows users to interact with the \code{batchLLM} package.
+}
 \description{
 This function provides a user interface using Shiny to interact with
 the \code{batchLLM} package. It allows users to configure and execute batch processing

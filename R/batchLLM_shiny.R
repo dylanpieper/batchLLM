@@ -3,6 +3,8 @@
 #' @description This function provides a user interface using Shiny to interact with
 #' the `batchLLM` package. It allows users to configure and execute batch processing
 #' through an interactive dashboard.
+#' 
+#' @return No return value. Launches a Shiny Gadget that allows users to interact with the `batchLLM` package.
 #'
 #' @importFrom shiny fluidPage fluidRow column titlePanel tabPanel tabsetPanel
 #' @importFrom shiny conditionalPanel HTML sidebarLayout sidebarPanel mainPanel
@@ -190,8 +192,8 @@ batchLLM_shiny <- function() {
                   justified = TRUE
                 ),
                 radioGroupButtons(
-                  inputId = "extract_XML",
-                  label = labelWithInfo("XML Extract:", "Requests a response in XML tags and removes unwanted text and preamble. May produce an unintended XML structure in longer responses."),
+                  inputId = "sanitize",
+                  label = labelWithInfo("Sanitize Output:", "Requests a response in XML tags and removes unwanted text (e.g., preamble) and all punctuation. May produce an unintended XML structure in longer responses."),
                   choices = c("False" = "FALSE", "True" = "TRUE"),
                   selected = "FALSE",
                   justified = TRUE
@@ -560,7 +562,7 @@ batchLLM_shiny <- function() {
               prompt = input$prompt,
               batch_delay = input$toggle_delay,
               batch_size = input$batch_size,
-              extract_XML = as.logical(input$extract_XML),
+              sanitize = as.logical(input$sanitize),
               model = config$model,
               temperature = config$temperature,
               max_tokens = config$max_tokens,

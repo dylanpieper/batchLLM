@@ -15,18 +15,17 @@
 #' @param max_tokens A maximum number of tokens to generate before stopping. Default is 500.
 #' @param batch_delay A string for the batch delay with the options: "random", "min", and "sec". Numeric examples include "1min" and "30sec". Default is "random" which is an average of 10.86 seconds (n = 1,000 simulations).
 #' @param batch_size The number of rows to process in each batch. Default is 10.
-#' @param extract_XML Extract the LLM text completion from the model's response by returning only content in \code{<result>} XML tags. This helps prevent unwanted text (e.g., preamble) from being included in the model's output. Default is TRUE.
+#' @param case_convert A string for the case conversion of the output with the options: "upper", "lower", or NULL (no change). Default is NULL.
+#' @param sanitize Extract the LLM text completion from the model's response by returning only content in \code{<result>} XML tags. Additionally, remove all punctuation. This feature prevents unwanted text (e.g., preamble) or punctuation from being included in the model's output. Default is FALSE.
 #' @param attempts The maximum number of loop retry attempts. Default is 1.
 #' @param log_name A string for the name of the log without the \code{.rds} file extension. Default is "batchLLM-log".
 #' @param hash_algo A string for a hashing algorithm from the 'digest' package. Default is \code{crc32c}.
-#' @param case_convert A string for the case conversion of the output with the options: "upper", "lower", or NULL (no change). Default is NULL.
 #' @param ... Additional arguments to pass on to the LLM API function.
 #' @return
 #' Returns the input data frame with an additional column containing the text completion output.
 #' The function also writes the output and metadata to the log file after each batch in a nested list format.
 #' @importFrom openai create_chat_completion
 #' @importFrom gemini.R gemini_chat
-#' @importFrom utils txtProgressBar setTxtProgressBar
 #' @importFrom stats runif
 #' @importFrom digest digest
 #' @importFrom dplyr mutate left_join row_number rename_with ends_with
@@ -76,11 +75,11 @@ batchLLM <- function(df,
                      max_tokens = 500,
                      batch_delay = "random",
                      batch_size = 10,
-                     extract_XML = FALSE,
+                     case_convert = NULL,
+                     sanitize = FALSE,
                      attempts = 1,
                      log_name = "batchLLM-log",
                      hash_algo = "crc32c",
-                     case_convert = NULL,
                      ...) {
   df_string <- if (!is.null(df_name)) df_name else deparse(substitute(df))
   col <- rlang::enquo(col)
@@ -136,7 +135,7 @@ batchLLM <- function(df,
     }
   }
 
-  extract_xml <- function(content, tag = "results") {
+  sanitize_output <- function(content, tag = "results") {
     if (is.null(content) || is.na(content) || !nzchar(content)) {
       return(NA_character_)
     }
@@ -144,10 +143,11 @@ batchLLM <- function(df,
     if (result == content) {
       return(NA_character_)
     }
+    result <- gsub("[[:punct:]]", "", result)
     return(result)
   }
 
-  sanitize_output <- function(content, case_convert) {
+  case_convert_output <- function(content, case_convert) {
     if (!is.null(case_convert) && case_convert != "none") {
       if (case_convert == "upper") {
         content <- toupper(content)
@@ -158,20 +158,20 @@ batchLLM <- function(df,
     return(trimws(content))
   }
 
-  batch_mutate <- function(df, df_col, df_string, col_string, system_prompt, batch_size, batch_delay, batch_num, batch_total, LLM, model, temperature, start_row, total_rows, log_name, case_convert, max_tokens, extract_XML, ...) {
-    build_prompt <- function(system_prompt, content_input, extract_XML) {
-      if (extract_XML) {
+  batch_mutate <- function(df, df_col, df_string, col_string, system_prompt, batch_size, batch_delay, batch_num, batch_total, LLM, model, temperature, start_row, total_rows, log_name, case_convert, sanitize, max_tokens, ...) {
+    build_prompt <- function(system_prompt, content_input, sanitize) {
+      if (sanitize) {
         paste0(system_prompt, "(put your response in a single level of XML tags <results></results> and continue in plain text):", as.character(content_input))
       } else {
         paste0(system_prompt, ":", as.character(content_input))
       }
     }
 
-    mutate_row <- function(df_string, df_row, content_input, system_prompt, LLM, model, temperature, batch_delay, log_name, case_convert, max_tokens, extract_XML, ...) {
+    mutate_row <- function(df_string, df_row, content_input, system_prompt, LLM, model, temperature, batch_delay, log_name, case_convert, sanitize, max_tokens, ...) {
       if (length(content_input) == 1 && !is.na(content_input)) {
         tryCatch(
           {
-            prompt <- build_prompt(system_prompt, content_input, extract_XML)
+            prompt <- build_prompt(system_prompt, content_input, sanitize)
             content_output <- NULL
 
             if (grepl("openai", LLM)) {
@@ -185,8 +185,8 @@ batchLLM <- function(df,
                 ),
                 ...
               )
-              if (extract_XML) {
-                content_output <- extract_xml(completion$choices$message.content)
+              if (sanitize) {
+                content_output <- sanitize_output(completion$choices$message.content)
               } else {
                 content_output <- completion$choices$message.content
               }
@@ -202,8 +202,8 @@ batchLLM <- function(df,
                 max_tokens = max_tokens,
                 ...
               )
-              if (extract_XML) {
-                content_output <- extract_xml(completion)
+              if (sanitize) {
+                content_output <- sanitize_output(completion)
               } else {
                 content_output <- completion
               }
@@ -215,8 +215,8 @@ batchLLM <- function(df,
                 maxOutputTokens = max_tokens,
                 ...
               )
-              if (extract_XML) {
-                content_output <- extract_xml(completion$outputs[["text"]])
+              if (sanitize) {
+                content_output <- sanitize_output(completion$outputs[["text"]])
               } else {
                 content_output <- completion$outputs[["text"]]
               }
@@ -224,23 +224,24 @@ batchLLM <- function(df,
 
             if (is.null(content_output)) stop("Failed to obtain content_output.")
             if (length(content_output) > 0) {
-              output_text <- sanitize_output(content_output[1], case_convert)
+              output_text <- case_convert_output(content_output[1], case_convert)
               return(output_text)
             } else {
-              stop("Error: completion message content returned NULL or empty")
+              stop("\U0001F6D1 Error: completion message content returned NULL or empty")
             }
           },
           error = function(e) {
-            stop(paste("Error occurred in mutate_row:", conditionMessage(e)))
+            stop(paste("\U0001F6D1 Error occurred in mutate_row:", conditionMessage(e)))
           }
         )
       } else {
-        stop("Invalid input: content_input must be a single non-NA value")
+        stop("\U0001F6D1 Invalid input: content_input must be a single non-NA value")
       }
     }
 
     df <- df |> dplyr::mutate(row_number = dplyr::row_number() + start_row - 1)
     result <- vector("character", nrow(df))
+
     for (i in seq_len(nrow(df))) {
       if (!is.na(df_col[i])) {
         result[i] <- tryCatch(
@@ -256,26 +257,28 @@ batchLLM <- function(df,
               batch_delay = batch_delay,
               log_name = log_name,
               case_convert = case_convert,
-              max_tokens = max_tokens,
-              extract_XML = extract_XML
+              sanitize = sanitize,
+              max_tokens = max_tokens
             )
           },
           error = function(e) {
-            stop(paste("Error in batch_mutate:", conditionMessage(e)))
+            stop(paste("\U0001F6D1 Error in batch_mutate:", conditionMessage(e)))
           }
         )
-        message(paste("Processed row", df$row_number[i], "of", total_rows))
+        message(paste("\u27A4 Processed row", df$row_number[i], "of", total_rows))
       } else {
-        message(paste("Skipping row", df$row_number[i], "(NA value)"))
+        message(paste("\u26A0\uFE0F Skipping row", df$row_number[i], "(NA value)"))
       }
       Sys.sleep(runif(1, min = 0.1, max = 0.3))
     }
+
     if (batch_num < batch_total) {
-      message("Taking a break to make the API happy \U0001F916\U00002764")
-      pb <- txtProgressBar(min = 0, max = 100, style = 3)
+      message("\u231B\uFE0F Taking a break to make the API happy")
+
       matches <- regmatches(batch_delay, regexec("(\\d+)(\\w+)", batch_delay))[[1]]
       delay_value <- as.numeric(matches[2])
       delay_unit <- matches[3]
+
       if (grepl("sec", delay_unit)) {
         delay <- delay_value / 100
       } else if (grepl("min", delay_unit)) {
@@ -283,30 +286,28 @@ batchLLM <- function(df,
       } else if (grepl("random", batch_delay)) {
         delay <- sample(seq(0.05, 0.15, by = 0.01), 1)
       } else {
-        cat("\n")
-        stop("Invalid unit of time.")
+        stop("\U0001F6D1 Invalid unit of time.")
       }
+
       for (i in 1:100) {
-        Sys.sleep(delay)
-        setTxtProgressBar(pb, i)
-        if (i %in% c(25, 50, 75)) {
-          cat("\n")
-          message(i, "% through the break")
+        Sys.sleep(delay / 100)
+        if (i %in% c(25, 50, 75, 100)) {
+          message(paste0("\U0001F4A4 ", i, "% through the break"))
         }
       }
-      close(pb)
+
     }
     df$llm_output <- result
     return(df)
   }
 
   if (!is.data.frame(df) || !inherits(df, "data.frame")) {
-    stop("Input must be a valid data frame.")
+    stop("\U0001F6D1 Input must be a valid data frame.")
   }
   if (!col_string %in% colnames(df)) {
-    stop(paste("Column", col_string, "does not exist in the input data frame."))
+    stop(paste("\U0001F6D1 Column", col_string, "does not exist in the input data frame."))
   }
-  param_id <- digest::digest(list(LLM, model, temperature, prompt, batch_size, batch_delay, max_tokens, extract_XML), algo = hash_algo)
+  param_id <- digest::digest(list(LLM, model, temperature, prompt, batch_size, batch_delay, max_tokens, sanitize), algo = hash_algo)
   new_col <- paste0(col_string, "_", param_id, algo = hash_algo)
   param_id <- digest::digest(df[[col_string]], algo = hash_algo)
   new_df_key <- paste0(df_string, "_", param_id)
@@ -326,12 +327,12 @@ batchLLM <- function(df,
         0
       }
       if (nrow(output) == nrow(df) && !any(is.na(output[[new_col]]))) {
-        message("All rows have already been processed for this column using the current config.")
+        message("\u2714 All rows have already been processed for this column using the current config.")
         df[[new_col]] <- output[[new_col]]
         return(df)
       }
       if (last_batch > 0) {
-        message("Resuming from batch ", last_batch + 1)
+        message("\U0001F6A9 Resuming from batch ", last_batch + 1)
       }
     } else {
       output <- if (is.null(progress$output)) df else progress$output
@@ -348,12 +349,12 @@ batchLLM <- function(df,
   start_time <- Sys.time()
   batch_total <- ceiling(nrow(df) / batch_size)
   for (batch_num in (last_batch + 1):batch_total) {
-    message("Starting batch ", batch_num, " of ", batch_total)
+    message("\U0001F6A9 Starting batch ", batch_num, " of ", batch_total)
     start_row <- (batch_num - 1) * batch_size + 1
     end_row <- min(batch_num * batch_size, nrow(df))
     rows_to_process <- which(is.na(output[start_row:end_row, new_col])) + start_row - 1
     if (length(rows_to_process) == 0) {
-      message("Skipping batch ", batch_num, " of ", batch_total, " as all rows are already processed.")
+      message("\u26A0\uFE0F Skipping batch ", batch_num, " of ", batch_total, " as all rows are already processed.")
       last_batch <- batch_num
       next
     }
@@ -393,8 +394,8 @@ batchLLM <- function(df,
             total_rows = nrow(df),
             log_name = log_name,
             case_convert = case_convert,
-            max_tokens = max_tokens,
-            extract_XML = extract_XML
+            sanitize = sanitize,
+            max_tokens = max_tokens
           )
           output[rows_to_process, new_col] <- output_batch$llm_output
           current_time <- Sys.time()
@@ -415,7 +416,7 @@ batchLLM <- function(df,
             status = "Completed",
             log_name = log_name
           )
-          message("Completed batch ", batch_num, " of ", batch_total)
+          message("\U0001F6A9 Completed batch ", batch_num, " of ", batch_total)
           retry_flag <- FALSE
         },
         error = function(e) {
@@ -434,9 +435,9 @@ batchLLM <- function(df,
               status = "Interrupted",
               log_name = log_name
             )
-            stop(paste("Error in batch ", batch_num, " of ", batch_total, ": ", conditionMessage(e), sep = ""))
+            stop(paste("\U0001F6D1 Error in batch ", batch_num, " of ", batch_total, ": ", conditionMessage(e), sep = ""))
           } else {
-            message(paste("Error occurred in batch ", batch_num, " of ", batch_total, ", trying again. Data processed up to row ", max(rows_to_process), ": ", conditionMessage(e), ". Attempt: ", counter, sep = ""))
+            message(paste("\U0001F6D1 Error occurred in batch ", batch_num, " of ", batch_total, ", trying again. Data processed up to row ", max(rows_to_process), ": ", conditionMessage(e), ". Attempt: ", counter, sep = ""))
             counter <- counter + 1
             Sys.sleep(runif(1, min = 1, max = 2))
           }
@@ -477,20 +478,20 @@ get_batches <- function(df_name = NULL, log_name = "batchLLM-log") {
   log_file <- paste0(log_name, ".rds")
 
   if (!file.exists(log_file)) {
-    stop("Log file does not exist.")
+    stop("\u26A0\uFE0F Log file does not exist.")
   }
 
   batch_log <- readRDS(log_file)
 
   if (is.null(df_name)) {
     stop(paste(
-      "You need to define 'df_name' with one of the following names:",
+      "\U0001F6D1 Please define 'df_name' with a valid name:",
       paste(unique(scrape_metadata()$df), collapse = ", ")
     ))
   }
 
   if (!df_name %in% names(batch_log$data)) {
-    stop(paste0("No data found in ", log_name, ".rds for the specified df_name"))
+    stop(paste0("\U0001F6D1 No data found in ", log_name, ".rds for the specified df_name"))
   }
 
   output <- batch_log$data[[df_name]]$output
@@ -525,7 +526,7 @@ scrape_metadata <- function(df_name = NULL, log_name = "batchLLM-log") {
   log_file <- paste0(log_name, ".rds")
 
   if (!file.exists(log_file)) {
-    warning("Log file does not exist.")
+    warning("\u26A0\uFE0F Log file does not exist.")
     return(data.frame(
       df_name = character(),
       col = character(),
@@ -574,7 +575,7 @@ scrape_metadata <- function(df_name = NULL, log_name = "batchLLM-log") {
 
   if (!is.null(df_name)) {
     if (!df_name %in% names(batch_log$data)) {
-      message(paste("No data found for", df_name, "in the log file."))
+      message(paste("\u26A0\uFE0F No data found for", df_name, "in the log file."))
       return(NULL)
     }
     return(scrape_df(df_name, batch_log$data[[df_name]]))
@@ -653,13 +654,13 @@ claudeR <- function(
     api_key = NULL,
     system_prompt = NULL) {
   if (grepl("claude-3", model) && !is.list(prompt)) {
-    stop("Claude-3 requires the input in a list format, e.g., list(list(role = \"user\", content = \"What is the capital of France?\"))")
+    stop("\U0001F6D1 Claude-3 requires the input in a list format, e.g., list(list(role = \"user\", content = \"What is the capital of France?\"))")
   }
 
   if (is.null(api_key)) {
     api_key <- Sys.getenv("ANTHROPIC_API_KEY")
     if (api_key == "") {
-      stop("Please provide an API key or set it as the ANTHROPIC_API_KEY environment variable.")
+      stop("\U0001F6D1 Please provide an API key or set it as the ANTHROPIC_API_KEY environment variable.")
     }
   }
 
@@ -691,10 +692,8 @@ claudeR <- function(
       result <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
       return(trimws(result$completion))
     } else {
-      warning(paste("API request failed with status", httr::http_status(response)$message))
-      cat(api_key)
-      cat("Error details:\n", httr::content(response, "text", encoding = "UTF-8"), "\n")
-      return(NULL)
+      warning(paste("\U0001F6D1 API request failed with status", httr::http_status(response)$message))
+      stop("\U0001F6D1 Error details:\n", httr::content(response, "text", encoding = "UTF-8"), "\n")
     }
   }
 
@@ -731,8 +730,7 @@ claudeR <- function(
     result <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
     return(result$content$text)
   } else {
-    warning(paste("API request failed with status", httr::http_status(response)$message))
-    cat("Error details:\n", httr::content(response, "text", encoding = "UTF-8"), "\n")
-    return(NULL)
+    warning(paste("\U0001F6D1 API request failed with status", httr::http_status(response)$message))
+    stop("\U0001F6D1 Error details:\n", httr::content(response, "text", encoding = "UTF-8"), "\n")
   }
 }

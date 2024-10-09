@@ -15,11 +15,11 @@ batchLLM(
   max_tokens = 500,
   batch_delay = "random",
   batch_size = 10,
-  extract_XML = FALSE,
+  case_convert = NULL,
+  sanitize = FALSE,
   attempts = 1,
   log_name = "batchLLM-log",
   hash_algo = "crc32c",
-  case_convert = NULL,
   ...
 )
 }
@@ -44,15 +44,15 @@ batchLLM(
 
 \item{batch_size}{The number of rows to process in each batch. Default is 10.}
 
-\item{extract_XML}{Extract the LLM text completion from the model's response by returning only content in \code{<result>} XML tags. This helps prevent unwanted text (e.g., preamble) from being included in the model's output. Default is TRUE.}
+\item{case_convert}{A string for the case conversion of the output with the options: "upper", "lower", or NULL (no change). Default is NULL.}
+
+\item{sanitize}{Extract the LLM text completion from the model's response by returning only content in \code{<result>} XML tags. Additionally, remove all punctuation. This feature prevents unwanted text (e.g., preamble) or punctuation from being included in the model's output. Default is FALSE.}
 
 \item{attempts}{The maximum number of loop retry attempts. Default is 1.}
 
 \item{log_name}{A string for the name of the log without the \code{.rds} file extension. Default is "batchLLM-log".}
 
 \item{hash_algo}{A string for a hashing algorithm from the 'digest' package. Default is \code{crc32c}.}
-
-\item{case_convert}{A string for the case conversion of the output with the options: "upper", "lower", or NULL (no change). Default is NULL.}
 
 \item{...}{Additional arguments to pass on to the LLM API function.}
 }
