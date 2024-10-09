@@ -1,7 +1,7 @@
 Package: batchLLM
 Type: Package
 Title: Batch Process LLM Text Completions Using a Data Frame
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: person("Dylan", "Pieper", email = "dylanpieper@gmail.com", role = c("aut", "cre", "cph"))
 Maintainer: Dylan Pieper <dylanpieper@gmail.com>
 Description: Batch process large language model (LLM) text completions using data frame rows, with support for OpenAI's 'GPT' (<https://chat.openai.com>), Anthropic's 'Claude' (<https://claude.ai>), and Google's 'Gemini' (<https://gemini.google.com>). Includes features such as local storage, metadata logging, API rate limiting delays, and a 'shiny' app addin.

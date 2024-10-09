@@ -1,3 +1,5 @@
+# batchLLM 0.2.0
+
 # batchLLM 0.1.0
 
 This is the initial release of the batchLLM package, offering a solution for batch processing text completions using large language models (LLMs) including OpenAI's GPT, Anthropic's Claude, and Google's Gemini. This package is designed to optimize text processing tasks by utilizing data frames and column rows as the input and a new column with the text completions as the output.
