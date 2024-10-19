@@ -1,6 +1,6 @@
 # batchLLM <img src="inst/batchLLM_hexLogo.png" width="120" align="right"/>
 
-[![GitHub stars](https://img.shields.io/github/stars/dylanpieper/batchLLM?style=social)](https://github.com/dylanpieper/batchLLM/stargazers) [![R-CMD-check](https://github.com/dylanpieper/batchLLM/workflows/R-CMD-check/badge.svg)](https://github.com/dylanpieper/batchLLM/actions)
+[![CRAN status](https://www.r-pkg.org/badges/version/batchLLM)](https://CRAN.R-project.org/package=batchLLM)[![CRAN downloads](https://cranlogs.r-pkg.org/badges/grand-total/batchLLM)](https://CRAN.R-project.org/package=batchLLM)[![R-CMD-check](https://github.com/dylanpieper/batchLLM/workflows/R-CMD-check/badge.svg)](https://github.com/dylanpieper/batchLLM/actions)[![GitHub stars](https://img.shields.io/github/stars/dylanpieper/batchLLM?style=social)](https://github.com/dylanpieper/batchLLM/stargazers)
 
 Batch process large language model (LLM) text completions by looping across the rows of a data frame column. This package is designed to optimize text processing tasks by utilizing data frames and column rows as the input and a new column with the text completions as the output.
 
