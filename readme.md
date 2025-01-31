@@ -6,14 +6,14 @@ Batch process large language model (LLM) text completions by looping across the 
 
 ## ⚠️ Package Status
 
-**Note: This package is now deprecated.**
+**This package is now deprecated.**
 
-I have decided to cease development of batchLLM. This was my first attempt at creating an R package for LLM integration, and while it served its purpose, there are now better alternatives to work on:
+I have stopped the development of batchLLM. This was my first attempt at creating an R package for LLM integration, and while it served its purpose, there are now better alternatives to work on:
 
-- For general LLM operations, check out the [ellmer package](https://github.com/tidyverse/ellmer), where a batch functionality will be integrated
-- For local LLM processing, consider using the [mall package](https://github.com/mlverse/mall)
+- For general LLM operations, check out the [ellmer package](https://github.com/tidyverse/ellmer) where batching will be integrated
+- For batch processing using local LLMs, consider using the [mall package](https://github.com/mlverse/mall)
 
-I appreciate everyone who used and supported this package. All existing functionality will remain available but no new features will be added or issues resolved.
+I appreciate everyone who used and supported this package. All existing functions will remain available but no new features will be added or issues resolved.
 
 ## 🚀 Features
 
